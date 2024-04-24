@@ -3,7 +3,7 @@ import uuid
 from collections import defaultdict, deque
 from functools import partial
 from itertools import chain
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Generator, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Generator, List, Optional, Type, Union, Any
 
 from loguru import logger
 
@@ -20,6 +20,8 @@ from langflow.schema import Record
 from langflow.schema.schema import INPUT_FIELD_NAME, InputType
 from langflow.services.deps import get_chat_service
 
+from base.langflow.graph.vertex.types import CustomComponentVertex
+
 if TYPE_CHECKING:
     from langflow.graph.schema import ResultData
 
@@ -31,8 +33,6 @@ class Graph:
         self,
         nodes: List[Dict],
         edges: List[Dict[str, str]],
-        flow_id: Optional[str] = None,
-        user_id: Optional[str] = None,
     ) -> None:
         """
         Initializes a new instance of the Graph class.
@@ -47,8 +47,6 @@ class Graph:
         self.raw_graph_data = {"nodes": nodes, "edges": edges}
         self._runs = 0
         self._updates = 0
-        self.flow_id = flow_id
-        self.user_id = user_id
         self._is_input_vertices: List[str] = []
         self._is_output_vertices: List[str] = []
         self._is_state_vertices: List[str] = []
@@ -973,9 +971,8 @@ class Graph:
             if "id" not in vertex_data:
                 raise ValueError(f"Vertex data for {vertex_data['display_name']} does not contain an id")
 
-            VertexClass = self._get_vertex_class(vertex_type, vertex_base_type, vertex_data["id"])
-
-            vertex_instance = VertexClass(vertex, graph=self)
+            # VertexClass = self._get_vertex_class(vertex_type)
+            vertex_instance = CustomComponentVertex(vertex, graph=self)
             vertex_instance.set_top_level(self.top_level_vertices)
             vertices.append(vertex_instance)
 
