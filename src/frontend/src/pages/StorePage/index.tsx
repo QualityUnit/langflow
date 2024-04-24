@@ -20,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import {
+  APIKEY_ERROR_ALERT,
+  COMPONENTS_ERROR_ALERT,
+  INVALID_API_ERROR_ALERT,
+  NOAPI_ERROR_ALERT,
+} from "../../constants/alerts_constants";
+import { STORE_DESC, STORE_TITLE } from "../../constants/constants";
 import { AuthContext } from "../../contexts/authContext";
 import { getStoreComponents, getStoreTags } from "../../controllers/API";
 import StoreApiKeyModal from "../../modals/StoreApiKeyModal";
@@ -62,18 +69,14 @@ export default function StorePage(): JSX.Element {
     if (!loadingApiKey) {
       if (!hasApiKey) {
         setErrorData({
-          title: "API Key Error",
-          list: [
-            "You don't have an API Key. Please add one to use the Langflow Store.",
-          ],
+          title: APIKEY_ERROR_ALERT,
+          list: [NOAPI_ERROR_ALERT],
         });
         setLoading(false);
       } else if (!validApiKey) {
         setErrorData({
-          title: "API Key Error",
-          list: [
-            "Your API Key is not valid. Please add a valid API Key to use the Langflow Store.",
-          ],
+          title: APIKEY_ERROR_ALERT,
+          list: [INVALID_API_ERROR_ALERT],
         });
       }
     }
@@ -144,14 +147,14 @@ export default function StorePage(): JSX.Element {
         }
       })
       .catch((err) => {
-        if (err.response.status === 403 || err.response.status === 401) {
+        if (err.response?.status === 403 || err.response?.status === 401) {
           setValidApiKey(false);
         } else {
           setSearchData([]);
           setTotalRowsCount(0);
           setLoading(false);
           setErrorData({
-            title: "Error getting components.",
+            title: COMPONENTS_ERROR_ALERT,
             list: [err["response"]["data"]["detail"]],
           });
         }
@@ -171,13 +174,14 @@ export default function StorePage(): JSX.Element {
   return (
     <PageLayout
       betaIcon
-      title="Langflow Store"
-      description="Search flows and components from the community."
+      title={STORE_TITLE}
+      description={STORE_DESC}
       button={
         <>
           {StoreApiKeyModal && (
             <StoreApiKeyModal disabled={loading}>
               <Button
+                data-testid="api-key-button-store"
                 disabled={loading}
                 className={cn(
                   `${!validApiKey ? "animate-pulse border-error" : ""}`,
@@ -198,6 +202,7 @@ export default function StorePage(): JSX.Element {
           <div className="flex items-end gap-4">
             <div className="relative h-12 w-[40%]">
               <Input
+                data-testid="search-store-input"
                 disabled={loading}
                 placeholder="Search Flows and Components"
                 className="absolute h-12 pl-5 pr-12"
@@ -217,6 +222,7 @@ export default function StorePage(): JSX.Element {
                 onClick={() => {
                   setSearchNow(uniqueId());
                 }}
+                data-testid="search-store-button"
               >
                 <IconComponent
                   name={loading ? "Loader2" : "Search"}
@@ -226,6 +232,7 @@ export default function StorePage(): JSX.Element {
             </div>
             <div className="ml-4 flex w-full gap-2 border-b border-border">
               <button
+                data-testid="all-button-store"
                 disabled={loading}
                 onClick={() => {
                   setTabActive("All");
@@ -240,6 +247,7 @@ export default function StorePage(): JSX.Element {
                 All
               </button>
               <button
+                data-testid="flows-button-store"
                 disabled={loading}
                 onClick={() => {
                   resetPagination();
@@ -255,6 +263,7 @@ export default function StorePage(): JSX.Element {
                 Flows
               </button>
               <button
+                data-testid="components-button-store"
                 disabled={loading}
                 onClick={() => {
                   resetPagination();
@@ -341,7 +350,7 @@ export default function StorePage(): JSX.Element {
                 setPageOrder(e);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger data-testid="select-order-store">
                 <SelectValue placeholder="Popular" />
               </SelectTrigger>
               <SelectContent>

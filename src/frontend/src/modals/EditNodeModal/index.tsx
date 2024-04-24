@@ -6,8 +6,8 @@ import DictComponent from "../../components/dictComponent";
 import Dropdown from "../../components/dropdownComponent";
 import FloatComponent from "../../components/floatComponent";
 import IconComponent from "../../components/genericIconComponent";
-import InputComponent from "../../components/inputComponent";
 import InputFileComponent from "../../components/inputFileComponent";
+import InputGlobalComponent from "../../components/inputGlobalComponent";
 import InputListComponent from "../../components/inputListComponent";
 import IntComponent from "../../components/intComponent";
 import KeypairListComponent from "../../components/keypairListComponent";
@@ -56,7 +56,6 @@ const EditNodeModal = forwardRef(
   ) => {
     const [myData, setMyData] = useState(data);
 
-    const setPending = useFlowStore((state) => state.setPending);
     const edges = useFlowStore((state) => state.edges);
     const setNode = useFlowStore((state) => state.setNode);
 
@@ -166,7 +165,19 @@ const EditNodeModal = forwardRef(
                                 )
                             ) ?? false;
                           return (
-                            <TableRow key={index} className="h-10">
+                            <TableRow
+                              key={index}
+                              className={
+                                "h-10 " +
+                                ((templateParam === "code" &&
+                                  myData.node?.template[templateParam].type ===
+                                    "code") ||
+                                (templateParam.includes("code") &&
+                                  myData.node?.template[templateParam].proxy)
+                                  ? " hidden "
+                                  : "")
+                              }
+                            >
                               <TableCell className="truncate p-0 text-center text-sm text-foreground sm:px-3">
                                 <ShadTooltip
                                   content={
@@ -194,6 +205,7 @@ const EditNodeModal = forwardRef(
                                     {myData.node.template[templateParam]
                                       .list ? (
                                       <InputListComponent
+                                        componentName={templateParam}
                                         editNode={true}
                                         disabled={disabled}
                                         value={
@@ -242,24 +254,23 @@ const EditNodeModal = forwardRef(
                                         }}
                                       />
                                     ) : (
-                                      <InputComponent
-                                        id={"input-" + index}
-                                        editNode={true}
+                                      <InputGlobalComponent
                                         disabled={disabled}
-                                        password={
-                                          myData.node.template[templateParam]
-                                            .password ?? false
+                                        editNode={true}
+                                        onChange={(value) =>
+                                          handleOnNewValue(value, templateParam)
                                         }
-                                        value={
-                                          myData.node.template[templateParam]
-                                            .value ?? ""
-                                        }
-                                        onChange={(value) => {
-                                          handleOnNewValue(
-                                            value,
-                                            templateParam
-                                          );
+                                        setDb={(value) => {
+                                          setMyData((oldData) => {
+                                            let newData = cloneDeep(oldData);
+                                            newData.node!.template[
+                                              templateParam
+                                            ].load_from_db = value;
+                                            return newData;
+                                          });
                                         }}
+                                        name={templateParam}
+                                        data={myData}
                                       />
                                     )}
                                   </div>
@@ -332,6 +343,10 @@ const EditNodeModal = forwardRef(
                                           templateParam
                                         );
                                       }}
+                                      isList={
+                                        data.node?.template[templateParam]
+                                          .list ?? false
+                                      }
                                     />
                                   </div>
                                 ) : myData.node?.template[templateParam]
@@ -339,7 +354,10 @@ const EditNodeModal = forwardRef(
                                   <div className="ml-auto">
                                     {" "}
                                     <ToggleShadComponent
-                                      id={"toggle-edit-" + index}
+                                      id={
+                                        "toggle-edit-" +
+                                        myData.node.template[templateParam].name
+                                      }
                                       disabled={disabled}
                                       enabled={
                                         myData.node.template[templateParam]
@@ -352,6 +370,7 @@ const EditNodeModal = forwardRef(
                                         );
                                       }}
                                       size="small"
+                                      editNode={true}
                                     />
                                   </div>
                                 ) : myData.node?.template[templateParam]
@@ -379,7 +398,6 @@ const EditNodeModal = forwardRef(
                                     .options ? (
                                   <div className="mx-auto">
                                     <Dropdown
-                                      numberOfOptions={nodeLength}
                                       editNode={true}
                                       options={
                                         myData.node.template[templateParam]
@@ -392,14 +410,20 @@ const EditNodeModal = forwardRef(
                                         myData.node.template[templateParam]
                                           .value ?? "Choose an option"
                                       }
-                                      id={"dropdown-edit-" + index}
+                                      id={
+                                        "dropdown-edit-" +
+                                        myData.node.template[templateParam].name
+                                      }
                                     ></Dropdown>
                                   </div>
                                 ) : myData.node?.template[templateParam]
                                     .type === "int" ? (
                                   <div className="mx-auto">
                                     <IntComponent
-                                      id={"edit-int-input-" + index}
+                                      id={
+                                        "edit-int-input-" +
+                                        myData.node.template[templateParam].name
+                                      }
                                       disabled={disabled}
                                       editNode={true}
                                       value={
@@ -479,7 +503,7 @@ const EditNodeModal = forwardRef(
                                       }
                                       dynamic={
                                         data.node!.template[templateParam]
-                                          .dynamic ?? false
+                                          ?.dynamic ?? false
                                       }
                                       setNodeClass={(nodeClass) => {
                                         data.node = nodeClass;
@@ -494,7 +518,10 @@ const EditNodeModal = forwardRef(
                                       onChange={(value: string | string[]) => {
                                         handleOnNewValue(value, templateParam);
                                       }}
-                                      id={"code-area-edit" + index}
+                                      id={
+                                        "code-area-edit" +
+                                        myData.node.template[templateParam].name
+                                      }
                                     />
                                   </div>
                                 ) : myData.node?.template[templateParam]
@@ -520,6 +547,7 @@ const EditNodeModal = forwardRef(
                                     }}
                                     disabled={disabled}
                                     size="small"
+                                    editNode={true}
                                   />
                                 </div>
                               </TableCell>
@@ -536,6 +564,7 @@ const EditNodeModal = forwardRef(
 
         <BaseModal.Footer>
           <Button
+            data-test-id="saveChangesBtn"
             id={"saveChangesBtn"}
             className="mt-3"
             onClick={() => {
@@ -546,7 +575,6 @@ const EditNodeModal = forwardRef(
                   node: myData.node,
                 },
               }));
-              setPending(true);
               setOpen(false);
             }}
             type="submit"
