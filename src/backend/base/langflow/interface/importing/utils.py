@@ -30,12 +30,8 @@ def import_module(module_path: str) -> Any:
     return getattr(module, object_name)
 
 
-def import_by_type(_type: str, name: str) -> Any:
+def import_by_type(name: str) -> Any:
     """Import class by type and name"""
-    if _type is None:
-        raise ValueError(f"Type cannot be None. Check if {name} is in the config file.")
-
-
     # fetching all components from settings
     components = settings.get_all_components()
     return import_module(components[name].module_import)

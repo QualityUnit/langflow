@@ -28,8 +28,7 @@ class StateService(Service):
 
 
 class InMemoryStateService(StateService):
-    def __init__(self, settings_service: SettingsService):
-        self.settings_service = settings_service
+    def __init__(self):
         self.states: dict = {}
         self.observers: dict = defaultdict(list)
         self.lock = Lock()

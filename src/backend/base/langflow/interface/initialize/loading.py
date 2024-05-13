@@ -13,13 +13,13 @@ def get_class_from_node_type(node_type: str) -> Type:
     pass
 
 
-async def instantiate_class(node_type: str, base_type: str, global_flow_params: Optional[Any], params: Dict, user_id=None) -> Any:
+async def instantiate_class(node_type: str, params: Dict, global_flow_params: Optional[Any]) -> Any:
     """Instantiate class from module type and key, and params"""
     params = convert_params_to_sets(params)
     params = convert_kwargs(params)
 
-    logger.debug(f"Instantiating {node_type} of type {base_type}")
-    class_object = import_by_type(_type=base_type, name=node_type)
+    logger.debug(f"Instantiating {node_type}")
+    class_object = import_by_type(name=node_type)
 
     # Instantiate the class based on the type
     # NOTE: there will be no validation for now since the types are loaded from config.yaml
