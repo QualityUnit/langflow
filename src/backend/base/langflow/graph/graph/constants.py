@@ -6,7 +6,6 @@ from langflow.interface.document_loaders.base import documentloader_creator
 from langflow.interface.embeddings.base import embedding_creator
 from langflow.interface.llms.base import llm_creator
 from langflow.interface.memories.base import memory_creator
-from langflow.interface.output_parsers.base import output_parser_creator
 from langflow.interface.prompts.base import prompt_creator
 from langflow.interface.retrievers.base import retriever_creator
 from langflow.interface.text_splitters.base import textsplitter_creator

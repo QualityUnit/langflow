@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -15,6 +15,7 @@ from langflow.utils.util import update_settings
 def load_flow_from_json(
     flow: Union[Path, str, dict],
     tweaks: Optional[dict] = None,
+    global_flow_params: Optional[Any]=None,
     log_level: Optional[str] = None,
     log_file: Optional[str] = None,
     env_file: Optional[str] = None,
@@ -66,7 +67,7 @@ def load_flow_from_json(
     if tweaks is not None:
         graph_data = process_tweaks(graph_data, tweaks)
 
-    graph = Graph.from_payload(graph_data)
+    graph = Graph.from_payload(graph_data, global_flow_params)
     return graph
 
 
@@ -74,6 +75,7 @@ def run_flow_from_json(
     flow: Union[Path, str, dict],
     input_value: str,
     tweaks: Optional[dict] = None,
+    global_flow_params: Optional[Any] = None,
     input_type: str = "chat",
     output_type: str = "chat",
     output_component: Optional[str] = None,
@@ -115,6 +117,7 @@ def run_flow_from_json(
     graph = load_flow_from_json(
         flow=flow,
         tweaks=tweaks,
+        global_flow_params=global_flow_params,
         log_level=log_level,
         log_file=log_file,
         env_file=env_file,

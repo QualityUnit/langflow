@@ -3,7 +3,7 @@ import uuid
 from collections import defaultdict, deque
 from functools import partial
 from itertools import chain
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Generator, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Generator, List, Optional, Tuple, Type, Union, Any
 
 from loguru import logger
 
@@ -20,7 +20,7 @@ from langflow.schema import Record
 from langflow.schema.schema import INPUT_FIELD_NAME, InputType
 from langflow.services.deps import get_chat_service
 
-from base.langflow.graph.vertex.types import CustomComponentVertex
+from langflow.graph.vertex.types import CustomComponentVertex
 
 if TYPE_CHECKING:
     from langflow.graph.schema import ResultData
@@ -30,9 +30,10 @@ class Graph:
     """A class representing a graph of vertices and edges."""
 
     def __init__(
-        self,
-        nodes: List[Dict],
-        edges: List[Dict[str, str]],
+            self,
+            nodes: List[Dict],
+            edges: List[Dict[str, str]],
+            global_flow_params: Optional[Any] = None,
     ) -> None:
         """
         Initializes a new instance of the Graph class.
@@ -42,6 +43,7 @@ class Graph:
             edges (List[Dict[str, str]]): A list of dictionaries representing the edges of the graph.
             flow_id (Optional[str], optional): The ID of the flow. Defaults to None.
         """
+        self.global_flow_params = global_flow_params
         self._vertices = nodes
         self._edges = edges
         self.raw_graph_data = {"nodes": nodes, "edges": edges}
@@ -121,10 +123,10 @@ class Graph:
                 continue
             vertex = self.get_vertex(vertex_id)
             if (
-                isinstance(vertex._raw_params["name"], str)
-                and name in vertex._raw_params["name"]
-                and vertex_id != caller
-                and isinstance(vertex, StateVertex)
+                    isinstance(vertex._raw_params["name"], str)
+                    and name in vertex._raw_params["name"]
+                    and vertex_id != caller
+                    and isinstance(vertex, StateVertex)
             ):
                 vertices_ids.append(vertex_id)
                 successors = self.get_all_successors(vertex, flat=True)
@@ -233,13 +235,13 @@ class Graph:
                     getattr(self, f"_{attribute}_vertices").append(vertex.id)
 
     async def _run(
-        self,
-        inputs: Dict[str, str],
-        input_components: list[str],
-        input_type: InputType | None,
-        outputs: list[str],
-        stream: bool,
-        session_id: str,
+            self,
+            inputs: Dict[str, str],
+            input_components: list[str],
+            input_type: InputType | None,
+            outputs: list[str],
+            stream: bool,
+            session_id: str,
     ) -> List[Optional["ResultData"]]:
         """
         Runs the graph with the given inputs.
@@ -266,7 +268,7 @@ class Graph:
                 vertex = self.get_vertex(vertex_id)
                 # If the vertex is not in the input_components list
                 if input_components and (
-                    vertex_id not in input_components or vertex.display_name not in input_components
+                        vertex_id not in input_components or vertex.display_name not in input_components
                 ):
                     continue
                 # If the input_type is not any and the input_type is not in the vertex id
@@ -306,13 +308,13 @@ class Graph:
         return vertex_outputs
 
     def run(
-        self,
-        inputs: list[Dict[str, str]],
-        input_components: Optional[list[list[str]]] = None,
-        types: Optional[list[InputType | None]] = None,
-        outputs: Optional[list[str]] = None,
-        session_id: Optional[str] = None,
-        stream: bool = False,
+            self,
+            inputs: list[Dict[str, str]],
+            input_components: Optional[list[list[str]]] = None,
+            types: Optional[list[InputType | None]] = None,
+            outputs: Optional[list[str]] = None,
+            session_id: Optional[str] = None,
+            stream: bool = False,
     ) -> List[RunOutputs]:
         """
         Run the graph with the given inputs and return the outputs.
@@ -353,13 +355,13 @@ class Graph:
         return loop.run_until_complete(coro)
 
     async def arun(
-        self,
-        inputs: list[Dict[str, str]],
-        inputs_components: Optional[list[list[str]]] = None,
-        types: Optional[list[InputType | None]] = None,
-        outputs: Optional[list[str]] = None,
-        session_id: Optional[str] = None,
-        stream: bool = False,
+            self,
+            inputs: list[Dict[str, str]],
+            inputs_components: Optional[list[list[str]]] = None,
+            types: Optional[list[InputType | None]] = None,
+            outputs: Optional[list[str]] = None,
+            session_id: Optional[str] = None,
+            stream: bool = False,
     ) -> List[RunOutputs]:
         """
         Runs the graph with the given inputs.
@@ -494,7 +496,7 @@ class Graph:
         self.__init__(**state)
 
     @classmethod
-    def from_payload(cls, payload: Dict, flow_id: Optional[str] = None, user_id: Optional[str] = None) -> "Graph":
+    def from_payload(cls, payload: Dict, global_flow_params: Optional[Any] = None, ) -> "Graph":
         """
         Creates a graph from a payload.
 
@@ -509,7 +511,7 @@ class Graph:
         try:
             vertices = payload["nodes"]
             edges = payload["edges"]
-            return cls(vertices, edges, flow_id, user_id)
+            return cls(vertices, edges, global_flow_params)
         except KeyError as exc:
             logger.exception(exc)
             if "nodes" not in payload and "edges" not in payload:
@@ -704,12 +706,12 @@ class Graph:
             raise ValueError(f"Vertex {vertex_id} not found")
 
     async def build_vertex(
-        self,
-        lock: asyncio.Lock,
-        set_cache_coro: Callable[["Graph", asyncio.Lock], Coroutine],
-        vertex_id: str,
-        inputs_dict: Optional[Dict[str, str]] = None,
-        user_id: Optional[str] = None,
+            self,
+            lock: asyncio.Lock,
+            set_cache_coro: Callable[["Graph", asyncio.Lock], Coroutine],
+            vertex_id: str,
+            inputs_dict: Optional[Dict[str, str]] = None,
+            user_id: Optional[str] = None,
     ):
         """
         Builds a vertex in the graph.
@@ -750,7 +752,7 @@ class Graph:
             raise exc
 
     async def get_next_and_top_level_vertices(
-        self, lock: asyncio.Lock, set_cache_coro: Callable[["Graph", asyncio.Lock], Coroutine], vertex: Vertex
+            self, lock: asyncio.Lock, set_cache_coro: Callable[["Graph", asyncio.Lock], Coroutine], vertex: Vertex
     ):
         """
         Retrieves the next runnable vertices and the top level vertices for a given vertex.
@@ -768,10 +770,10 @@ class Graph:
         return next_runnable_vertices, top_level_vertices
 
     def get_vertex_edges(
-        self,
-        vertex_id: str,
-        is_target: Optional[bool] = None,
-        is_source: Optional[bool] = None,
+            self,
+            vertex_id: str,
+            is_target: Optional[bool] = None,
+            is_source: Optional[bool] = None,
     ) -> List[ContractEdge]:
         """Returns a list of edges for a given vertex."""
         # The idea here is to return the edges that have the vertex_id as source or target
@@ -780,7 +782,7 @@ class Graph:
             edge
             for edge in self.edges
             if (edge.source_id == vertex_id and is_source is not False)
-            or (edge.target_id == vertex_id and is_target is not False)
+               or (edge.target_id == vertex_id and is_target is not False)
         ]
 
     def get_vertices_with_target(self, vertex_id: str) -> List[Vertex]:
@@ -817,7 +819,6 @@ class Graph:
                         lock=lock,
                         set_cache_coro=set_cache_coro,
                         vertex_id=vertex_id,
-                        user_id=self.user_id,
                         inputs_dict={},
                     ),
                     name=f"{vertex.display_name} Run {vertex_task_run_count.get(vertex_id, 0)}",
@@ -1098,9 +1099,9 @@ class Graph:
         return vertices_to_keep
 
     def layered_topological_sort(
-        self,
-        vertices: List[Vertex],
-        filter_graphs: bool = False,
+            self,
+            vertices: List[Vertex],
+            filter_graphs: bool = False,
     ) -> List[List[str]]:
         """Performs a layered topological sort of the vertices in the graph."""
         vertices_ids = {vertex.id for vertex in vertices}
@@ -1227,9 +1228,9 @@ class Graph:
         return max_index
 
     def sort_vertices(
-        self,
-        stop_component_id: Optional[str] = None,
-        start_component_id: Optional[str] = None,
+            self,
+            stop_component_id: Optional[str] = None,
+            start_component_id: Optional[str] = None,
     ) -> List[str]:
         """Sorts the vertices in the graph."""
         self.mark_all_vertices("ACTIVE")

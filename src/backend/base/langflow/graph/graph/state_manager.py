@@ -16,7 +16,7 @@ class GraphStateManager:
             logger.debug(f"Error getting state service. Defaulting to InMemoryStateService: {e}")
             from langflow.services.state.service import InMemoryStateService
 
-            self.state_service = InMemoryStateService(get_settings_service())
+            self.state_service = InMemoryStateService()
 
     def append_state(self, key, new_state, run_id: str):
         self.state_service.append_state(key, new_state, run_id)

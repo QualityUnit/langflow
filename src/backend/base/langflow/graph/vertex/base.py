@@ -57,6 +57,7 @@ class Vertex:
         self.has_external_output = False
         self.graph = graph
         self._data = data
+        self._global_flow_params = graph.global_flow_params
         self.base_type: Optional[str] = base_type
         self._parse_data()
         self._built_object = UnbuiltObject()
@@ -614,8 +615,9 @@ class Vertex:
             raise ValueError(f"Base type for vertex {self.display_name} not found")
         try:
             result = await loading.instantiate_class(
-                user_id=user_id,
-                vertex=self,
+                node_type=self.vertex_type,
+                params=self.params,
+                global_flow_params=self._global_flow_params,
             )
             self._update_built_object_and_artifacts(result)
         except Exception as exc:
