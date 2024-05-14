@@ -1,0 +1,41 @@
+chains:
+  LLMChain:
+    documentation: "https://api.python.langchain.com/en/latest/chains/langchain.chains.llm.LLMChain.html#langchain.chains.llm.LLMChain"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.chains import LLMChainComponent"
+
+  CombineDocsChain:
+    documentation: "https://api.python.langchain.com/en/latest/chains/langchain.chains.conversational_retrieval.base.ConversationalRetrievalChain.html"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.chains import CombineDocsChainComponent"
+
+  RetrievalQA:
+    documentation: "https://api.python.langchain.com/en/latest/chains/langchain.chains.retrieval_qa.base.RetrievalQA.html#langchain.chains.retrieval_qa.base.RetrievalQA"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.chains import RetrievalQAComponent"
+
+models:
+  ChatOpenAI:
+    documentation: "https://api.python.langchain.com/en/latest/chat_models/langchain_community.chat_models.openai.ChatOpenAI.html#langchain_community.chat_models.openai.ChatOpenAI"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.llms import ChatOpenAIComponent"
+
+prompts:
+  PromptTemplate:
+    documentation: "https://api.python.langchain.com/en/latest/prompts/langchain_core.prompts.prompt.PromptTemplate.html#langchain_core.prompts.prompt.PromptTemplate"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.prompts import PromptTemplateComponent"
+
+retrievers:
+  DomainRetriever:
+    documentation: "Urlslab Custom Component: Retriever for retrieving the content of domain"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.retrievers import DomainRetrieverComponent"
+
+  MultiQueryRetriever:
+    documentation: "Urlslab Custom Component: Splits the query based on a prompt template and user query and in out put it can be connected to chains"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.retrievers import MultiQueryRetrieverComponent"
+
+Inputs:
+  ChatInput:
+    documentation: "Chat Input for starting node of the flow"
+    module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.inputs import ChatInputComponent"
+
+Outputs:
+    ChatOutput:
+        documentation: "Chat Output for ending node of the flow"
+        module_import: "from app.infrastructure.services.urlslab_langflow.urlslab_components.outputs import ChatOutputComponent"

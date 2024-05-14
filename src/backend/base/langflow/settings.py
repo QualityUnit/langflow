@@ -11,7 +11,7 @@ from pydantic_settings import BaseSettings
 from langflow.utils.logger import logger
 
 # component config path
-COMPONENT_CONFIG_PATH = os.getenv("COMPONENT_CONFIG_PATH", str(Path(__file__).parent / "component_config.yaml"))
+COMPONENT_CONFIG_PATH = str(Path(__file__).parent / "flow_components.yaml")
 
 
 class ConfigurableComponent(BaseModel):
