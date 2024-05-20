@@ -141,7 +141,8 @@ export default function Page({
   const setNode = useFlowStore((state) => state.setNode);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      const selectedNode = nodes.filter((obj) => obj.selected);
+      const selectedNode = lastSelection?.nodes ?? [];
+      const selectedEdges = lastSelection?.edges ?? [];
       if (
         selectionMenuVisible &&
         (event.ctrlKey || event.metaKey) &&
@@ -174,7 +175,7 @@ export default function Page({
       ) {
         event.preventDefault();
         paste(
-          { nodes: selectedNode, edges: [] },
+          { nodes: selectedNode, edges: selectedEdges },
           {
             x: position.current.x,
             y: position.current.y,
@@ -482,6 +483,7 @@ export default function Page({
               ></Controls>
             )}
             <SelectionMenu
+              lastSelection={lastSelection}
               isVisible={selectionMenuVisible}
               nodes={lastSelection?.nodes}
               onClick={() => {
