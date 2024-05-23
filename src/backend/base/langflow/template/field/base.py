@@ -82,7 +82,7 @@ class TemplateField(BaseModel):
     def serialize_model(self, handler):
         result = handler(self)
         # If the field is str, we add the Text input type
-        if self.field_type in ["str", "Text"]:
+        if self.field_type in ["Text"]:
             if "input_types" not in result:
                 result["input_types"] = ["Text"]
         if self.field_type == "Text":
