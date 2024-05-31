@@ -75,6 +75,9 @@ class TemplateField(BaseModel):
     title_case: bool = False
     """Specifies if the field should be displayed in title case. Defaults to True."""
 
+    loading_options_api: Optional[str] = None
+    """Specifies the API to use for loading the fields of an option"""
+
     def to_dict(self):
         return self.model_dump(by_alias=True, exclude_none=True)
 
