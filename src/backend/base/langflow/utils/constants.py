@@ -61,7 +61,8 @@ DIRECT_TYPES = [
     "Any",
     "prompt",
     "code",
-    "dynamic_dropdown",
+    "dynamic_multi_select",
+    "multi_select",
     "NestedDict",
 ]
 
