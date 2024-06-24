@@ -2,8 +2,8 @@ from typing import Optional
 
 from langchain.chains import ConversationChain
 
-from langflow.field_typing import BaseLanguageModel, BaseMemory, Text
-from langflow.interface.custom.custom_component import CustomComponent
+from langflow.custom import CustomComponent
+from langflow.field_typing import BaseMemory, LanguageModel, Text
 
 
 class ConversationChainComponent(CustomComponent):
@@ -27,7 +27,7 @@ class ConversationChainComponent(CustomComponent):
     def build(
         self,
         input_value: Text,
-        llm: BaseLanguageModel,
+        llm: LanguageModel,
         memory: Optional[BaseMemory] = None,
     ) -> Text:
         if memory is None:

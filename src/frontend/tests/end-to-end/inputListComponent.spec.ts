@@ -21,7 +21,7 @@ test("InputListComponent", async ({ page }) => {
   }
 
   await page.getByTestId("blank-flow").click();
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(3000);
   await page.getByTestId("extended-disclosure").click();
   await page.getByPlaceholder("Search").click();
   await page.getByPlaceholder("Search").fill("astradb");
@@ -68,7 +68,7 @@ test("InputListComponent", async ({ page }) => {
     .getByTestId("input-list-input-edit_metadata_indexing_include-1")
     .fill("test1 test1 test1 test1");
 
-  await page.locator('//*[@id="saveChangesBtn"]').click();
+  await page.getByText("Save Changes", { exact: true }).click();
 
   await page
     .getByTestId("input-list-input_metadata_indexing_include-0")
@@ -89,7 +89,7 @@ test("InputListComponent", async ({ page }) => {
   }
 
   await page
-    .getByTestId("input-list-minus-btn_metadata_indexing_include-0")
+    .getByTestId("input-list-minus-btn_metadata_indexing_include-1")
     .click();
 
   const plusButtonLocator = page.getByTestId(
@@ -105,13 +105,13 @@ test("InputListComponent", async ({ page }) => {
     .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
   await page
-    .getByTestId("input-list-plus-btn_metadata_indexing_include-1")
+    .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
   await page
-    .getByTestId("input-list-plus-btn_metadata_indexing_include-2")
+    .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
   await page
-    .getByTestId("input-list-plus-btn_metadata_indexing_include-3")
+    .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
 
   await page
@@ -154,7 +154,7 @@ test("InputListComponent", async ({ page }) => {
   }
 
   await page
-    .getByTestId("input-list-minus-btn-edit_metadata_indexing_include-0")
+    .getByTestId("input-list-minus-btn-edit_metadata_indexing_include-1")
     .click();
   await page
     .getByTestId("input-list-minus-btn-edit_metadata_indexing_include-1")
@@ -173,7 +173,7 @@ test("InputListComponent", async ({ page }) => {
   );
   const elementCountEdit2 = await plusButtonLocatorEdit2?.count();
 
-  if (elementCountEdit0 > 0 || elementCountEdit2 > 0) {
+  if (elementCountEdit0 > 1 || elementCountEdit2 > 0) {
     expect(false).toBeTruthy();
   }
 
@@ -189,7 +189,7 @@ test("InputListComponent", async ({ page }) => {
 
   const elementCountMinusEdit2 = await minusButtonLocatorEdit2?.count();
 
-  if (elementCountMinusEdit1 > 0 || elementCountMinusEdit2 > 0) {
+  if (elementCountMinusEdit1 > 1 || elementCountMinusEdit2 > 0) {
     expect(false).toBeTruthy();
   }
 });

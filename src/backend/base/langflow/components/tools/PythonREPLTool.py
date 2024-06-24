@@ -1,10 +1,9 @@
 import importlib
-
-from langchain.agents import Tool
 from langchain_experimental.utilities import PythonREPL
 
 from langflow.base.tools.base import build_status_from_tool
 from langflow.custom import CustomComponent
+from langchain_core.tools import Tool
 
 
 class PythonREPLToolComponent(CustomComponent):
@@ -37,7 +36,7 @@ class PythonREPLToolComponent(CustomComponent):
                 imported_module = importlib.import_module(module)
                 global_dict[imported_module.__name__] = imported_module
             except ImportError:
-                print(f"Could not import module {module}")
+                raise ImportError(f"Could not import module {module}")
         return global_dict
 
     def build(
