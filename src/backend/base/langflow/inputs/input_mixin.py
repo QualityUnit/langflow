@@ -17,6 +17,7 @@ class FieldTypes(str, Enum):
     FILE = "file"
     PROMPT = "prompt"
     OTHER = "other"
+    MULTI_SELECT = "multi_select"
 
 
 SerializableFieldTypes = Annotated[FieldTypes, PlainSerializer(lambda v: v.value, return_type=str)]

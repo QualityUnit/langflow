@@ -52,7 +52,7 @@ def load_flow_from_json(
         load_dotenv(env_file, override=True)
 
     # Update settings with cache and components path
-    update_settings(cache=cache)
+    # update_settings(cache=cache)
 
     if isinstance(flow, (str, Path)):
         with open(flow, "r", encoding="utf-8") as f:

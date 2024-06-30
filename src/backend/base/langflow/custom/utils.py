@@ -9,6 +9,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from loguru import logger
 from pydantic import BaseModel
+from langflow.inputs.input_mixin import FieldTypes
 
 from langflow.custom import CustomComponent
 from langflow.custom.custom_component.component import Component
@@ -29,6 +30,11 @@ from langflow.type_extraction.type_extraction import extract_inner_type
 from langflow.utils import validate
 from langflow.utils.util import get_base_classes
 
+FLOWHUNT_CUSTOM_TYPES = [
+    "prompt",
+    "dynamic_multi_select",
+    "multi_select",
+]
 
 class UpdateBuildConfigError(Exception):
     pass
@@ -157,6 +163,8 @@ def add_new_custom_field(
         elif "field_type" in field_config and field_config["field_type"] is not None:
             field_type = field_config.pop("field_type")
     field_contains_list = "list" in field_type.lower()
+    if field_config.get("field_type", None) is not None:
+        field_type = field_config["field_type"] if field_config["field_type"] in FLOWHUNT_CUSTOM_TYPES else field_type
     field_type = process_type(field_type)
     field_value = field_config.pop("value", field_value)
     field_advanced = field_config.pop("advanced", False)

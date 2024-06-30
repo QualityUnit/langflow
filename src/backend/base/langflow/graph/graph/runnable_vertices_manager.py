@@ -82,8 +82,6 @@ class RunnableVerticesManager:
 
     async def get_next_runnable_vertices(
         self,
-        lock: asyncio.Lock,
-        set_cache_coro: Callable[["Graph", asyncio.Lock], Coroutine],
         graph: "Graph",
         vertex: "Vertex",
         cache: bool = True,
@@ -102,19 +100,17 @@ class RunnableVerticesManager:
             list: A list of IDs of the next runnable vertices.
 
         """
-        async with lock:
-            self.remove_from_predecessors(vertex.id)
-            direct_successors_ready = [v for v in vertex.successors_ids if self.is_vertex_runnable(v)]
-            if not direct_successors_ready:
-                # No direct successors ready, look for runnable predecessors of successors
-                next_runnable_vertices = self.find_runnable_predecessors_for_successors(vertex.id)
-            else:
-                next_runnable_vertices = direct_successors_ready
+        self.remove_from_predecessors(vertex.id)
+        direct_successors_ready = [v for v in vertex.successors_ids if self.is_vertex_runnable(v)]
+        if not direct_successors_ready:
+            # No direct successors ready, look for runnable predecessors of successors
+            next_runnable_vertices = self.find_runnable_predecessors_for_successors(vertex.id)
+        else:
+            next_runnable_vertices = direct_successors_ready
 
-            for v_id in set(next_runnable_vertices):  # Use set to avoid duplicates
-                self.remove_vertex_from_runnables(v_id)
-            if cache:
-                await set_cache_coro(data=graph, lock=lock)  # type: ignore
+        for v_id in set(next_runnable_vertices):  # Use set to avoid duplicates
+            self.remove_vertex_from_runnables(v_id)
+
         return next_runnable_vertices
 
     def remove_vertex_from_runnables(self, v_id):

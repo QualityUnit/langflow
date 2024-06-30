@@ -549,7 +549,13 @@ class Vertex:
         self._handle_func(key, result)
         if isinstance(result, list):
             self._extend_params_list_with_result(key, result)
-        self.params[key] = result
+        # Added Manually by Flowhunt
+        # Picking only params needed for this vertex
+        needed_keys = [e.source_handle.name for e in self.incoming_edges if e.source_handle.id == vertex.id and e.target_handle.fieldName == key]
+        if len(needed_keys) == 1 and isinstance(result, dict):
+            self.params[key] = result[needed_keys[0]]
+        else:
+            self.params[key] = result
 
     async def _build_list_of_vertices_and_update_params(
         self,
@@ -612,8 +618,7 @@ class Vertex:
             raise ValueError(f"Base type for vertex {self.display_name} not found")
         try:
             result = await loading.instantiate_class(
-                node_type=self.vertex_type,
-                params=self.params,
+                vertex=self,
                 global_flow_params=self._global_flow_params,
             )
             self.outputs_logs = build_output_logs(self, result)

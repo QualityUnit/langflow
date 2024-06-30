@@ -85,11 +85,7 @@ class Graph:
         self.build_graph_maps(self.edges)
         self.define_vertices_lists()
         self.state_manager = GraphStateManager()
-        try:
-            self.tracing_service: "TracingService" | None = get_tracing_service()
-        except Exception as exc:
-            logger.error(f"Error getting tracing service: {exc}")
-            self.tracing_service = None
+        self.tracing_service = None # disable tracing
 
     def get_state(self, name: str) -> Optional[Data]:
         """
@@ -239,7 +235,8 @@ class Graph:
         self.tracing_service.set_run_name(name)
 
     async def initialize_run(self):
-        await self.tracing_service.initialize_tracers()
+        # await self.tracing_service.initialize_tracers()
+        pass
 
     async def end_all_traces(self, outputs: dict[str, Any] | None = None, error: str | None = None):
         if not self.tracing_service:
@@ -324,12 +321,6 @@ class Graph:
                 raise ValueError(f"Vertex {vertex_id} not found")
             vertex.update_raw_params({"session_id": session_id})
         # Process the graph
-        try:
-            cache_service = get_chat_service()
-            if self.flow_id:
-                await cache_service.set_cache(self.flow_id, self)
-        except Exception as exc:
-            logger.exception(exc)
 
         try:
             start_component_id = next(
@@ -589,7 +580,7 @@ class Graph:
             state["run_manager"] = RunnableVerticesManager.from_dict(run_manager)
         self.__dict__.update(state)
         self.state_manager = GraphStateManager()
-        self.tracing_service = get_tracing_service()
+        # self.tracing_service = get_tracing_service()
         self.set_run_id(self._run_id)
         self.set_run_name()
 
@@ -812,8 +803,6 @@ class Graph:
 
     async def build_vertex(
             self,
-            lock: asyncio.Lock,
-            set_cache_coro: Callable[["Graph", asyncio.Lock], Coroutine],
             vertex_id: str,
             inputs_dict: Optional[Dict[str, str]] = None,
             user_id: Optional[str] = None,
@@ -909,7 +898,7 @@ class Graph:
         run_id = uuid.uuid4()
         self.set_run_id(run_id)
         self.set_run_name()
-        await self.initialize_run()
+        # await self.initialize_run()
         while to_process:
             current_batch = list(to_process)  # Copy current deque items to a list
             to_process.clear()  # Clear the deque for new items
@@ -918,8 +907,6 @@ class Graph:
                 vertex = self.get_vertex(vertex_id)
                 task = asyncio.create_task(
                     self.build_vertex(
-                        lock=lock,
-                        set_cache_coro=set_cache_coro,
                         vertex_id=vertex_id,
                         inputs_dict={},
                     ),
@@ -936,7 +923,7 @@ class Graph:
         logger.debug("Graph processing complete")
         return self
 
-    async def _execute_tasks(self, tasks: List[asyncio.Task], lock: asyncio.Lock) -> List[str]:
+    async def _execute_tasks(self, tasks: List[asyncio.Task]) -> List[str]:
         """Executes tasks in parallel, handling exceptions for each task."""
         results = []
         completed_tasks = await asyncio.gather(*tasks, return_exceptions=True)
@@ -961,10 +948,9 @@ class Graph:
             # This could usually happen with input vertices like ChatInput
             self.run_manager.remove_vertex_from_runnables(v.id)
 
-        set_cache_coro = partial(get_chat_service().set_cache, key=self.flow_id)
         for v in vertices:
             next_runnable_vertices = await self.run_manager.get_next_runnable_vertices(
-                lock, set_cache_coro, graph=self, vertex=v, cache=False
+                graph=self, vertex=v, cache=False
             )
             results.extend(next_runnable_vertices)
         return results
