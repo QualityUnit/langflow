@@ -22,7 +22,8 @@ from sqlmodel import select
 from langflow.main import setup_app
 from langflow.services.database.models.folder.utils import create_default_folder_if_it_doesnt_exist
 from langflow.services.database.utils import session_getter
-from langflow.services.deps import get_db_service
+from langflow.services.deps import get_db_service, get_settings_service, session_scope
+from langflow.services.settings.constants import DEFAULT_SUPERUSER
 from langflow.services.utils import initialize_services
 from langflow.utils.logger import configure, logger
 from langflow.utils.util import update_settings
@@ -76,14 +77,13 @@ def set_var_for_macos_issue():
 def run(
     host: str = typer.Option("127.0.0.1", help="Host to bind the server to.", envvar="LANGFLOW_HOST"),
     workers: int = typer.Option(1, help="Number of worker processes.", envvar="LANGFLOW_WORKERS"),
-    timeout: int = typer.Option(300, help="Worker timeout in seconds."),
+    timeout: int = typer.Option(300, help="Worker timeout in seconds.", envvar="LANGFLOW_WORKER_TIMEOUT"),
     port: int = typer.Option(7860, help="Port to listen on.", envvar="LANGFLOW_PORT"),
     components_path: Optional[Path] = typer.Option(
         Path(__file__).parent / "components",
         help="Path to the directory containing custom components.",
         envvar="LANGFLOW_COMPONENTS_PATH",
     ),
-    config: str = typer.Option(Path(__file__).parent / "config.yaml", help="Path to the configuration file."),
     # .env file param
     env_file: Path = typer.Option(None, help="Path to the .env file containing environment variables."),
     log_level: str = typer.Option("critical", help="Logging level.", envvar="LANGFLOW_LOG_LEVEL"),
@@ -121,7 +121,7 @@ def run(
     ),
 ):
     """
-    Run the Langflow.
+    Run Langflow.
     """
 
     configure(log_level=log_level, log_file=log_file)
@@ -132,7 +132,6 @@ def run(
         load_dotenv(env_file, override=True)
 
     update_settings(
-        config,
         dev=dev,
         remove_api_keys=remove_api_keys,
         cache=cache,
@@ -141,10 +140,14 @@ def run(
     )
     # create path object if path is provided
     static_files_dir: Optional[Path] = Path(path) if path else None
+    settings_service = get_settings_service()
+    settings_service.set("backend_only", backend_only)
     app = setup_app(static_files_dir=static_files_dir, backend_only=backend_only)
     # check if port is being used
     if is_port_in_use(port, host):
         port = get_free_port(port)
+
+    settings_service.set("worker_timeout", timeout)
 
     options = {
         "bind": f"{host}:{port}",
@@ -164,7 +167,7 @@ def run(
         else:
             # Run using gunicorn on Linux
             process = run_on_mac_or_linux(host, port, log_level, options, app)
-        if open_browser:
+        if open_browser and not backend_only:
             click.launch(f"http://{host}:{port}")
         if process:
             process.join()
@@ -378,10 +381,11 @@ def print_banner(host: str, port: int):
     styled_package_name = stylize_text(package_name, package_name, any("pre-release" in notice for notice in notices))
 
     title = f"[bold]Welcome to :chains: {styled_package_name}[/bold]\n"
-    info_text = "Collaborate, and contribute at our [bold][link=https://github.com/langflow-ai/langflow]GitHub Repo[/link][/bold] :rocket:"
+    info_text = "Collaborate, and contribute at our [bold][link=https://github.com/langflow-ai/langflow]GitHub Repo[/link][/bold] :star2:"
+    telemetry_text = "We collect anonymous usage data to improve Langflow.\nYou can opt-out by setting [bold]DO_NOT_TRACK=true[/bold] in your environment."
     access_link = f"Access [link=http://{host}:{port}]http://{host}:{port}[/link]"
 
-    panel_content = "\n\n".join([title, *styled_notices, info_text, access_link])
+    panel_content = "\n\n".join([title, *styled_notices, info_text, telemetry_text, access_link])
     panel = Panel(panel_content, box=box.ROUNDED, border_style="blue", expand=False)
     rprint(panel)
 
@@ -508,6 +512,66 @@ def migration(
         db_service.run_migrations()
     results = db_service.run_migrations_test()
     display_results(results)
+
+
+@app.command()
+def api_key(
+    log_level: str = typer.Option("error", help="Logging level.", envvar="LANGFLOW_LOG_LEVEL"),
+):
+    """
+    Creates an API key for the default superuser if AUTO_LOGIN is enabled.
+
+    Args:
+        log_level (str, optional): Logging level. Defaults to "error".
+
+    Returns:
+        None
+    """
+    configure(log_level=log_level)
+    initialize_services()
+    settings_service = get_settings_service()
+    auth_settings = settings_service.auth_settings
+    if not auth_settings.AUTO_LOGIN:
+        typer.echo("Auto login is disabled. API keys cannot be created through the CLI.")
+        return
+    with session_scope() as session:
+        from langflow.services.database.models.user.model import User
+
+        superuser = session.exec(select(User).where(User.username == DEFAULT_SUPERUSER)).first()
+        if not superuser:
+            typer.echo("Default superuser not found. This command requires a superuser and AUTO_LOGIN to be enabled.")
+            return
+        from langflow.services.database.models.api_key import ApiKey, ApiKeyCreate
+        from langflow.services.database.models.api_key.crud import create_api_key, delete_api_key
+
+        api_key = session.exec(select(ApiKey).where(ApiKey.user_id == superuser.id)).first()
+        if api_key:
+            delete_api_key(session, api_key.id)
+
+        api_key_create = ApiKeyCreate(name="CLI")
+        unmasked_api_key = create_api_key(session, api_key_create, user_id=superuser.id)
+        session.commit()
+        # Create a banner to display the API key and tell the user it won't be shown again
+        api_key_banner(unmasked_api_key)
+
+
+def api_key_banner(unmasked_api_key):
+    is_mac = platform.system() == "Darwin"
+    import pyperclip  # type: ignore
+
+    pyperclip.copy(unmasked_api_key.api_key)
+    panel = Panel(
+        f"[bold]API Key Created Successfully:[/bold]\n\n"
+        f"[bold blue]{unmasked_api_key.api_key}[/bold blue]\n\n"
+        "This is the only time the API key will be displayed. \n"
+        "Make sure to store it in a secure location. \n\n"
+        f"The API key has been copied to your clipboard. [bold]{['Ctrl','Cmd'][is_mac]} + V[/bold] to paste it.",
+        box=box.ROUNDED,
+        border_style="blue",
+        expand=False,
+    )
+    console = Console()
+    console.print(panel)
 
 
 def main():

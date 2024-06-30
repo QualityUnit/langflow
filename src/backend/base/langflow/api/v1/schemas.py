@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serial
 from langflow.graph.schema import RunOutputs
 from langflow.schema import dotdict
 from langflow.schema.graph import Tweaks
-from langflow.schema.schema import InputType, OutputType
+from langflow.schema.schema import InputType, OutputLog, OutputType
 from langflow.services.database.models.api_key.model import ApiKeyRead
 from langflow.services.database.models.base import orjson_dumps
 from langflow.services.database.models.flow import FlowCreate, FlowRead
@@ -149,8 +149,8 @@ class FlowListRead(BaseModel):
 
 class FlowListReadWithFolderName(BaseModel):
     flows: List[FlowRead]
-    folder_name: str
-    folder_description: str
+    name: str
+    description: str
 
 
 class InitResponse(BaseModel):
@@ -180,6 +180,11 @@ class CustomComponentRequest(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     code: str
     frontend_node: Optional[dict] = None
+
+
+class CustomComponentResponse(BaseModel):
+    data: dict
+    type: str
 
 
 class UpdateCustomComponentRequest(CustomComponentRequest):
@@ -245,9 +250,12 @@ class VerticesOrderResponse(BaseModel):
 
 class ResultDataResponse(BaseModel):
     results: Optional[Any] = Field(default_factory=dict)
+    outputs: dict[str, OutputLog] = Field(default_factory=dict)
+    message: Optional[Any] = Field(default_factory=dict)
     artifacts: Optional[Any] = Field(default_factory=dict)
     timedelta: Optional[float] = None
     duration: Optional[str] = None
+    used_frozen_result: Optional[bool] = False
 
 
 class VertexBuildResponse(BaseModel):
@@ -316,3 +324,7 @@ class FlowDataRequest(BaseModel):
     nodes: List[dict]
     edges: List[dict]
     viewport: Optional[dict] = None
+
+
+class ConfigResponse(BaseModel):
+    frontend_timeout: int

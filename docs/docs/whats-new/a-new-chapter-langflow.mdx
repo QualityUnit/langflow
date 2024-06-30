@@ -28,7 +28,7 @@ It allows you to define the structure of your conversation and the data that flo
 This makes it easier to understand and control your conversation.
 
 This change comes with a new way of visualizing your projects. Before 1.0 you would connect Components to ultimately build one final Component that was processed behind the scenes.
-Now, each step of the process is defined by you, is visible on the canvas, and can be monitored and controlled by you. This makes it so that Composition is now just another way of building in Langflow. **Now data flows through your project more transparently**.
+Now, each step of the process is defined by you, is visible on the workspace, and can be monitored and controlled by you. This makes it so that Composition is now just another way of building in Langflow. **Now data flows through your project more transparently**.
 
 The caveat is existing projects may need some new Components to get them back to their full functionality.
 [We've made this as easy as possible](../migration/compatibility), and there will be improvements to it as we get feedback in our Discord server and on GitHub.
@@ -41,7 +41,7 @@ By having a clear definition of Inputs and Outputs, we could build the experienc
 When building a project testing and debugging is crucial. The Playground is a tool that changes dynamically based on the Inputs and Outputs you defined in your project.
 
 For example, let's say you are building a simple RAG application. Generally, you have an Input, some references that come from a Vector Store Search, a Prompt and the answer.
-Now, you could plug the output of your Prompt into a [Text Output](../components/outputs#Text-Output), rename that to "Prompt Result" and see the output of your Prompt in the Playground.
+Now, you could plug the output of your Prompt into a [Text Output](../components/inputs-and-outputs), rename that to "Prompt Result" and see the output of your Prompt in the Playground.
 
 {/* Add image here of the described above */}
 

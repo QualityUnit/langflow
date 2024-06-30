@@ -3,6 +3,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useNavigate } from "react-router-dom";
 import "reactflow/dist/style.css";
 import "./App.css";
+import AlertDisplayArea from "./alerts/displayArea";
 import ErrorAlert from "./alerts/error";
 import NoticeAlert from "./alerts/notice";
 import SuccessAlert from "./alerts/success";
@@ -15,45 +16,36 @@ import {
 } from "./constants/constants";
 import { AuthContext } from "./contexts/authContext";
 import { autoLogin, getGlobalVariables, getHealth } from "./controllers/API";
+import { setupAxiosDefaults } from "./controllers/API/utils";
+import useTrackLastVisitedPath from "./hooks/use-track-last-visited-path";
 import Router from "./routes";
+import { Case } from "./shared/components/caseComponent";
 import useAlertStore from "./stores/alertStore";
 import { useDarkStore } from "./stores/darkStore";
 import useFlowsManagerStore from "./stores/flowsManagerStore";
 import { useFolderStore } from "./stores/foldersStore";
-import { useGlobalVariablesStore } from "./stores/globalVariables";
+import { useGlobalVariablesStore } from "./stores/globalVariablesStore/globalVariables";
 import { useStoreStore } from "./stores/storeStore";
-import { useTypesStore } from "./stores/typesStore";
 export default function App() {
-  const removeFromTempNotificationList = useAlertStore(
-    (state) => state.removeFromTempNotificationList
-  );
-  const tempNotificationList = useAlertStore(
-    (state) => state.tempNotificationList
-  );
+  useTrackLastVisitedPath();
+
   const [fetchError, setFetchError] = useState(false);
   const isLoading = useFlowsManagerStore((state) => state.isLoading);
 
-  const removeAlert = (id: string) => {
-    removeFromTempNotificationList(id);
-  };
-
   const { isAuthenticated, login, setUserData, setAutoLogin, getUser } =
     useContext(AuthContext);
-  const refreshFlows = useFlowsManagerStore((state) => state.refreshFlows);
   const setLoading = useAlertStore((state) => state.setLoading);
   const fetchApiData = useStoreStore((state) => state.fetchApiData);
-  const getTypes = useTypesStore((state) => state.getTypes);
   const refreshVersion = useDarkStore((state) => state.refreshVersion);
   const refreshStars = useDarkStore((state) => state.refreshStars);
   const setGlobalVariables = useGlobalVariablesStore(
-    (state) => state.setGlobalVariables
+    (state) => state.setGlobalVariables,
   );
   const checkHasStore = useStoreStore((state) => state.checkHasStore);
   const navigate = useNavigate();
   const dark = useDarkStore((state) => state.dark);
 
-  const getFoldersApi = useFolderStore((state) => state.getFoldersApi);
-  const loadingFolders = useFolderStore((state) => state.loading);
+  const isLoadingFolders = useFolderStore((state) => state.isLoadingFolders);
 
   const [isLoadingHealth, setIsLoadingHealth] = useState(false);
 
@@ -76,7 +68,6 @@ export default function App() {
           login(user["access_token"]);
           setUserData(user);
           setAutoLogin(true);
-          setLoading(false);
           fetchAllData();
         }
       })
@@ -104,7 +95,6 @@ export default function App() {
   const fetchAllData = async () => {
     setTimeout(async () => {
       await Promise.all([refreshStars(), refreshVersion(), fetchData()]);
-      getFoldersApi();
     }, 1000);
   };
 
@@ -112,12 +102,14 @@ export default function App() {
     return new Promise<void>(async (resolve, reject) => {
       if (isAuthenticated) {
         try {
-          await getTypes();
-          await refreshFlows();
+          await setupAxiosDefaults();
+
           const res = await getGlobalVariables();
           setGlobalVariables(res);
+
           checkHasStore();
           fetchApiData();
+
           resolve();
         } catch (error) {
           console.error("Failed to fetch data:", error);
@@ -170,6 +162,8 @@ export default function App() {
     }
   };
 
+  const isLoadingApplication = isLoading || isLoadingFolders;
+
   return (
     //need parent component with width and height
     <div className="flex h-full flex-col">
@@ -192,58 +186,20 @@ export default function App() {
             ></FetchErrorComponent>
           }
 
-          {isLoading || loadingFolders ? (
+          <Case condition={isLoadingApplication}>
             <div className="loading-page-panel">
               <LoadingComponent remSize={50} />
             </div>
-          ) : (
-            <>
-              <Router />
-            </>
-          )}
+          </Case>
+
+          <Case condition={!isLoadingApplication}>
+            <Router />
+          </Case>
         </>
       </ErrorBoundary>
       <div></div>
       <div className="app-div">
-        <div className="flex flex-col-reverse" style={{ zIndex: 999 }}>
-          {tempNotificationList.map((alert) => (
-            <div key={alert.id}>
-              {alert.type === "error" && (
-                <ErrorAlert
-                  key={alert.id}
-                  title={alert.title}
-                  list={alert.list}
-                  id={alert.id}
-                  removeAlert={removeAlert}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="z-40 flex flex-col-reverse">
-          {tempNotificationList.map((alert) => (
-            <div key={alert.id}>
-              {alert.type === "notice" ? (
-                <NoticeAlert
-                  key={alert.id}
-                  title={alert.title}
-                  link={alert.link}
-                  id={alert.id}
-                  removeAlert={removeAlert}
-                />
-              ) : (
-                alert.type === "success" && (
-                  <SuccessAlert
-                    key={alert.id}
-                    title={alert.title}
-                    id={alert.id}
-                    removeAlert={removeAlert}
-                  />
-                )
-              )}
-            </div>
-          ))}
-        </div>
+        <AlertDisplayArea />
       </div>
     </div>
   );

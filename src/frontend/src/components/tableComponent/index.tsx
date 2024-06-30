@@ -1,7 +1,9 @@
 import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the grid
 import "ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme applied to the grid
 import { AgGridReact, AgGridReactProps } from "ag-grid-react";
-import { ElementRef, forwardRef, useCallback } from "react";
+import cloneDeep from "lodash";
+import { ElementRef, forwardRef, useRef, useState } from "react";
+import { boolean } from "zod";
 import {
   DEFAULT_TABLE_ALERT_MSG,
   DEFAULT_TABLE_ALERT_TITLE,
@@ -11,12 +13,25 @@ import "../../style/ag-theme-shadcn.css"; // Custom CSS applied to the grid
 import { cn } from "../../utils/utils";
 import ForwardedIconComponent from "../genericIconComponent";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import TableOptions from "./components/TableOptions";
+import resetGrid from "./utils/reset-grid-columns";
 
 interface TableComponentProps extends AgGridReactProps {
   columnDefs: NonNullable<AgGridReactProps["columnDefs"]>;
   rowData: NonNullable<AgGridReactProps["rowData"]>;
   alertTitle?: string;
   alertDescription?: string;
+  editable?:
+    | boolean
+    | string[]
+    | {
+        field: string;
+        onUpdate: (value: any) => void;
+        editableCell: boolean;
+      }[];
+  pagination?: boolean;
+  onDelete?: () => void;
+  onDuplicate?: () => void;
 }
 
 const TableComponent = forwardRef<
@@ -29,54 +44,94 @@ const TableComponent = forwardRef<
       alertDescription = DEFAULT_TABLE_ALERT_MSG,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const dark = useDarkStore((state) => state.dark);
-    var currentRowHeight: number;
-    var minRowHeight = 25;
-
-    const getRowHeight = useCallback(() => {
-      return currentRowHeight;
-    }, []);
-
-    const onGridReady = useCallback((params: any) => {
-      minRowHeight = params.api.getSizesForCurrentTheme().rowHeight;
-      currentRowHeight = minRowHeight;
-    }, []);
-
-    const updateRowHeight = (params: { api: any }) => {
-      const bodyViewport = document.querySelector(".ag-body-viewport");
-      if (!bodyViewport) {
-        return;
+    let colDef = props.columnDefs.map((col, index) => {
+      let newCol = {
+        ...col,
+      };
+      if (props.onSelectionChanged && index === 0) {
+        newCol = {
+          ...newCol,
+          checkboxSelection: true,
+          headerCheckboxSelection: true,
+          headerCheckboxSelectionFilteredOnly: true,
+        };
       }
-      var gridHeight = bodyViewport.clientHeight;
-      var renderedRowCount = params.api.getDisplayedRowCount();
-
-      if (renderedRowCount * minRowHeight >= gridHeight) {
-        if (currentRowHeight !== minRowHeight) {
-          currentRowHeight = minRowHeight;
-          params.api.resetRowHeights();
+      if (
+        (typeof props.editable === "boolean" && props.editable) ||
+        (Array.isArray(props.editable) &&
+          props.editable.every((field) => typeof field === "string") &&
+          (props.editable as Array<string>).includes(newCol.headerName ?? ""))
+      ) {
+        newCol = {
+          ...newCol,
+          editable: true,
+        };
+      }
+      if (
+        Array.isArray(props.editable) &&
+        props.editable.every((field) => typeof field === "object")
+      ) {
+        const field = (
+          props.editable as Array<{
+            field: string;
+            onUpdate: (value: any) => void;
+            editableCell: boolean;
+          }>
+        ).find((field) => field.field === newCol.headerName);
+        if (field) {
+          newCol = {
+            ...newCol,
+            editable: field.editableCell,
+            onCellValueChanged: (e) => field.onUpdate(e),
+          };
         }
-      } else {
-        currentRowHeight = Math.floor(gridHeight / renderedRowCount);
-        params.api.resetRowHeights();
       }
+      return newCol;
+    });
+    const gridRef = useRef(null);
+    // @ts-ignore
+    const realRef: React.MutableRefObject<AgGridReact> = ref?.current
+      ? ref
+      : gridRef;
+    const dark = useDarkStore((state) => state.dark);
+    const initialColumnDefs = useRef(colDef);
+    const [columnStateChange, setColumnStateChange] = useState(false);
+    const storeReference = props.columnDefs.map((e) => e.headerName).join("_");
+
+    const onGridReady = (params) => {
+      // @ts-ignore
+      realRef.current = params;
+      const updatedColumnDefs = [...colDef];
+      params.api.setGridOption("columnDefs", updatedColumnDefs);
+      const customInit = localStorage.getItem(storeReference);
+      initialColumnDefs.current = params.api.getColumnDefs();
+      if (customInit && realRef.current) {
+        realRef.current.api.applyColumnState({
+          state: JSON.parse(customInit),
+          applyOrder: true,
+        });
+      }
+      setTimeout(() => {
+        if (customInit && realRef.current) {
+          setColumnStateChange(true);
+        } else {
+          setColumnStateChange(false);
+        }
+      }, 50);
+      setTimeout(() => {
+        realRef?.current?.api?.hideOverlay();
+      }, 1000);
+      if (props.onGridReady) props.onGridReady(params);
     };
-
-    const onFirstDataRendered = useCallback(
-      (params: any) => {
-        updateRowHeight(params);
-      },
-      [updateRowHeight]
-    );
-
-    const onGridSizeChanged = useCallback(
-      (params: any) => {
-        updateRowHeight(params);
-      },
-      [updateRowHeight]
-    );
-
+    const onColumnMoved = (params) => {
+      const updatedColumnDefs = cloneDeep(
+        params.columnApi.getAllGridColumns().map((col) => col.getColDef()),
+      );
+      params.api.setGridOption("columnDefs", updatedColumnDefs);
+      if (props.onColumnMoved) props.onColumnMoved(params);
+    };
     if (props.rowData.length === 0) {
       return (
         <div className="flex h-full w-full items-center justify-center rounded-md border">
@@ -91,29 +146,52 @@ const TableComponent = forwardRef<
         </div>
       );
     }
-
     return (
       <div
         className={cn(
           dark ? "ag-theme-quartz-dark" : "ag-theme-quartz",
-          "ag-theme-shadcn flex h-full flex-col"
+          "ag-theme-shadcn flex h-full flex-col",
+          "relative",
         )} // applying the grid theme
       >
         <AgGridReact
           {...props}
-          className={cn(props.className, "custom-scroll")}
-          getRowHeight={getRowHeight}
-          onGridReady={onGridReady}
-          onFirstDataRendered={onFirstDataRendered}
-          onGridSizeChanged={onGridSizeChanged}
           defaultColDef={{
             minWidth: 100,
           }}
-          ref={ref}
+          animateRows={false}
+          columnDefs={colDef}
+          ref={realRef}
+          onGridReady={onGridReady}
+          onColumnMoved={onColumnMoved}
+          onStateUpdated={(e) => {
+            if (e.sources.some((source) => source.includes("column"))) {
+              localStorage.setItem(
+                storeReference,
+                JSON.stringify(realRef.current?.api?.getColumnState()),
+              );
+              setColumnStateChange(true);
+            }
+          }}
         />
+        {props.pagination && (
+          <TableOptions
+            stateChange={columnStateChange}
+            hasSelection={realRef.current?.api?.getSelectedRows().length > 0}
+            duplicateRow={props.onDuplicate ? props.onDuplicate : undefined}
+            deleteRow={props.onDelete ? props.onDelete : undefined}
+            resetGrid={() => {
+              resetGrid(realRef, initialColumnDefs);
+              setTimeout(() => {
+                setColumnStateChange(false);
+                localStorage.removeItem(storeReference);
+              }, 100);
+            }}
+          />
+        )}
       </div>
     );
-  }
+  },
 );
 
 export default TableComponent;

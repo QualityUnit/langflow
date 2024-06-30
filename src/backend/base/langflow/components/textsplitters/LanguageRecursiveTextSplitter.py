@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from langchain.text_splitter import Language
+from langchain_text_splitters import Language, RecursiveCharacterTextSplitter
 
-from langflow.interface.custom.custom_component import CustomComponent
-from langflow.schema.schema import Record
+from langflow.custom import CustomComponent
+from langflow.schema import Data
 
 
 class LanguageRecursiveTextSplitterComponent(CustomComponent):
@@ -14,7 +14,7 @@ class LanguageRecursiveTextSplitterComponent(CustomComponent):
     def build_config(self):
         options = [x.value for x in Language]
         return {
-            "inputs": {"display_name": "Input", "input_types": ["Document", "Record"]},
+            "inputs": {"display_name": "Input", "input_types": ["Document", "Data"]},
             "separator_type": {
                 "display_name": "Separator Type",
                 "info": "The type of separator to use.",
@@ -44,11 +44,11 @@ class LanguageRecursiveTextSplitterComponent(CustomComponent):
 
     def build(
         self,
-        inputs: List[Record],
+        inputs: List[Data],
         chunk_size: Optional[int] = 1000,
         chunk_overlap: Optional[int] = 200,
         separator_type: str = "Python",
-    ) -> list[Record]:
+    ) -> list[Data]:
         """
         Split text into chunks of a specified length.
 
@@ -61,7 +61,6 @@ class LanguageRecursiveTextSplitterComponent(CustomComponent):
         Returns:
             list[str]: The chunks of text.
         """
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
 
         # Make sure chunk_size and chunk_overlap are ints
         if isinstance(chunk_size, str):
@@ -76,10 +75,10 @@ class LanguageRecursiveTextSplitterComponent(CustomComponent):
         )
         documents = []
         for _input in inputs:
-            if isinstance(_input, Record):
+            if isinstance(_input, Data):
                 documents.append(_input.to_lc_document())
             else:
                 documents.append(_input)
         docs = splitter.split_documents(documents)
-        records = self.to_records(docs)
-        return records
+        data = self.to_data(docs)
+        return data
