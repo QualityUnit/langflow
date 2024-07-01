@@ -2,7 +2,6 @@ from typing import Dict, List, cast
 
 from langchain.agents import AgentExecutor, BaseSingleActionAgent
 from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
-from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
 
 from langflow.custom import Component
@@ -87,7 +86,7 @@ class ToolCallingAgentComponent(Component):
             verbose=True,
             handle_parsing_errors=self.handle_parsing_errors,
         )
-        input_dict: dict[str, str | list[BaseMessage]] = {"input": self.input_value}
+        input_dict: dict[str, str | list[Dict[str, str]]] = {"input": self.input_value}
         if hasattr(self, "memory") and self.memory:
             input_dict["chat_history"] = self.convert_chat_history(self.memory)
         result = await runnable.ainvoke(input_dict)
