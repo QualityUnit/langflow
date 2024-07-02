@@ -23,7 +23,7 @@ class Message(Data):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     # Helper class to deal with image data
     text_key: str = "text"
-    text: Optional[str | AsyncIterator | Iterator] = Field(default="")
+    text: Optional[List[str] | str | AsyncIterator | Iterator] = Field(default="")
     sender: Optional[str] = None
     sender_name: Optional[str] = None
     files: Optional[list[str | Image]] = Field(default=[])

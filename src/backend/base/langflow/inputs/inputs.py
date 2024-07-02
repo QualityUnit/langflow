@@ -160,6 +160,8 @@ class MessageTextInput(StrInput, MetadataTraceMixin, InputTraceMixin):
                 )
         elif isinstance(v, (AsyncIterator, Iterator)):
             value = v
+        elif isinstance(v, list) and all(isinstance(i, Message) or isinstance(i, str) for i in v):
+            value = v
         else:
             raise ValueError(f"Invalid value type {type(v)}")
         return value
