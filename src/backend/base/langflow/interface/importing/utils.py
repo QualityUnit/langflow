@@ -1,6 +1,7 @@
 # This module is used to import any langchain class by name.
 
 import importlib
+import sys
 from typing import Any, Type
 
 from langflow.settings import settings
@@ -15,7 +16,10 @@ def import_module(module_path: str) -> Any:
     _, module_path, _, object_name = module_path.split()
 
     # Import the module using the module path
-    module = importlib.import_module(module_path)
+    if module_path in sys.modules:
+        module = importlib.reload(sys.modules[module_path])
+    else:
+        module = importlib.import_module(module_path)
 
     return getattr(module, object_name)
 
