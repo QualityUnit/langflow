@@ -76,7 +76,7 @@ class Component(CustomComponent):
         for key, value in params.copy().items():
             if key not in self._inputs:
                 continue
-            input_ = self._inputs[key]
+            input_ = self._inputs[key].model_copy()
             # BaseInputMixin has a `validate_assignment=True`
             input_.value = value
             params[input_.name] = input_.value
