@@ -113,6 +113,8 @@ class MessageInput(StrInput, InputTraceMixin):
             return v
         if isinstance(v, str):
             return Message(text=v)
+        elif isinstance(v, list) and all(isinstance(i, Message) or isinstance(i, str) for i in v):
+            return v
         raise ValueError(f"Invalid value type {type(v)}")
 
 
