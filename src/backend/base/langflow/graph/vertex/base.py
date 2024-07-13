@@ -216,12 +216,7 @@ class Vertex:
                 list_to_append.extend(value_dict["input_types"])
 
         template_dict = self.data["node"]["template"]
-        self.vertex_type = (
-            self.data["type"]
-            if "Tool" not in [type_ for out in self.outputs for type_ in out["types"]]
-            or template_dict["_type"].islower()
-            else template_dict["_type"]
-        )
+        self.vertex_type = self.data["type"]
 
         if self.base_type is None:
             for base_type, value in lazy_load_dict.ALL_TYPES_DICT.items():
