@@ -14,6 +14,8 @@ from langflow.inputs import (
     PromptInput,
     SecretStrInput,
     StrInput,
+    DynamicMultiSelect,
+    MultiSelect
 )
 from langflow.template import Output
 
@@ -34,4 +36,6 @@ __all__ = [
     "StrInput",
     "MessageTextInput",
     "Output",
+    "DynamicMultiSelect",
+    "MultiSelect"
 ]

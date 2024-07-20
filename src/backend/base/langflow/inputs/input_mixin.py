@@ -18,6 +18,7 @@ class FieldTypes(str, Enum):
     PROMPT = "prompt"
     OTHER = "other"
     MULTI_SELECT = "multi_select"
+    DYNAMIC_MULTI_SELECT = "dynamic_multi_select"
 
 
 SerializableFieldTypes = Annotated[FieldTypes, PlainSerializer(lambda v: v.value, return_type=str)]
@@ -69,6 +70,9 @@ class BaseInputMixin(BaseModel, validate_assignment=True):
 
     title_case: bool = False
     """Specifies if the field should be displayed in title case. Defaults to True."""
+
+    loading_options_api: Optional[str] = None
+    """Specifies the api to integrate to in order to load the options in dynamic_multi_select"""
 
     def to_dict(self):
         return self.model_dump(exclude_none=True, by_alias=True)

@@ -306,6 +306,13 @@ class FileInput(BaseInputMixin, ListableInputMixin, FileMixin, MetadataTraceMixi
 
     field_type: Optional[SerializableFieldTypes] = FieldTypes.FILE
 
+class DynamicMultiSelect(BaseInputMixin):
+    field_type: Optional[SerializableFieldTypes] = FieldTypes.DYNAMIC_MULTI_SELECT
+
+class MultiSelect(BaseInputMixin, DropDownMixin):
+    field_type: Optional[SerializableFieldTypes] = FieldTypes.MULTI_SELECT
+    options: list[str] = Field(default_factory=list)
+
 
 InputTypes = Union[
     BoolInput,
@@ -323,4 +330,6 @@ InputTypes = Union[
     StrInput,
     MessageTextInput,
     MessageInput,
+    DynamicMultiSelect,
+    MultiSelect
 ]
