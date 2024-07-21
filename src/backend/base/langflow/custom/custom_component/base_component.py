@@ -40,9 +40,9 @@ class BaseComponent:
                 setattr(self, key, value)
 
 
-        # Validate the emoji at the icon field
-        if hasattr(self, "icon") and self.icon:
-            self.icon = self.validate_icon(self.icon)
+        # Validate the emoji at the icon field - no need to validate icon
+        # if hasattr(self, "icon") and self.icon:
+        #     self.icon = self.validate_icon(self.icon)
 
     def __setattr__(self, key, value):
         if key == "_user_id" and hasattr(self, "_user_id"):
