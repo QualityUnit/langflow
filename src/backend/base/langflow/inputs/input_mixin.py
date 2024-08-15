@@ -19,6 +19,7 @@ class FieldTypes(str, Enum):
     OTHER = "other"
     MULTI_SELECT = "multi_select"
     DYNAMIC_MULTI_SELECT = "dynamic_multi_select"
+    DYNAMIC_SINGLE_SELECT = "dynamic_single_select"
 
 
 SerializableFieldTypes = Annotated[FieldTypes, PlainSerializer(lambda v: v.value, return_type=str)]
