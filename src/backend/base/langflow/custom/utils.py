@@ -33,6 +33,7 @@ from langflow.utils.util import get_base_classes
 FLOWHUNT_CUSTOM_TYPES = [
     "prompt",
     "dynamic_multi_select",
+    "dynamic_single_select",
     "multi_select",
 ]
 
