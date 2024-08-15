@@ -15,6 +15,7 @@ from .inputs import (
     SecretStrInput,
     StrInput,
     DynamicMultiSelect,
+    DynamicSingleSelect,
     MultiSelect,
 )
 
@@ -35,5 +36,6 @@ __all__ = [
     "StrInput",
     "MessageTextInput",
     "DynamicMultiSelect",
+    "DynamicSingleSelect",
     "MultiSelect"
 ]

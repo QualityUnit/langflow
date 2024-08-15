@@ -334,5 +334,6 @@ InputTypes = Union[
     MessageTextInput,
     MessageInput,
     DynamicMultiSelect,
+    DynamicSingleSelect,
     MultiSelect
 ]
