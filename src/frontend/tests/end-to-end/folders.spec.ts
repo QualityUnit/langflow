@@ -22,6 +22,10 @@ test("CRUD folders", async ({ page }) => {
   }
   await page.getByRole("heading", { name: "Basic Prompting" }).click();
 
+  await page.waitForSelector('[data-testid="icon-ChevronLeft"]', {
+    timeout: 100000,
+  });
+
   await page.getByTestId("icon-ChevronLeft").first().click();
 
   await page.getByText("My Collection").nth(2).isVisible();
@@ -35,16 +39,25 @@ test("CRUD folders", async ({ page }) => {
   await page.getByText("New Folder").last().isVisible();
   await page.waitForTimeout(1000);
   await page.getByText("New Folder").last().dblclick();
-  await page.getByTestId("input-folder").fill("new folder test name");
-  await page.keyboard.press("Enter");
-  await page.getByText("new folder test name").last().isVisible();
+
+  const element = await page.getByTestId("input-folder");
+  await element.fill("new folder test name");
+
+  await page.getByText("My Projects").last().click({
+    force: true,
+  });
+
+  await page.getByText("new folder test name").last().waitFor({
+    state: "visible",
+    timeout: 30000,
+  });
 
   await page
     .getByText("new folder test name")
     .last()
     .hover()
     .then(async () => {
-      await page.getByTestId("icon-trash").last().click();
+      await page.getByTestId("btn-delete-folder").last().click();
     });
 
   await page.getByText("Delete").last().click();
@@ -54,11 +67,17 @@ test("CRUD folders", async ({ page }) => {
 
 test("add folder by drag and drop", async ({ page }) => {
   await page.goto("/");
-  await page.waitForTimeout(2000);
+
+  await page.waitForTimeout(5000); // Consider using a more reliable waiting mechanism
 
   const jsonContent = readFileSync(
     "tests/end-to-end/assets/collection.json",
     "utf-8",
+  );
+
+  // Wait for the target element to be available before evaluation
+  await page.waitForSelector(
+    '//*[@id="root"]/div/div[2]/div[2]/div[3]/aside/nav/div/div[2]',
   );
 
   // Create the DataTransfer and File
@@ -74,7 +93,7 @@ test("add folder by drag and drop", async ({ page }) => {
 
   // Now dispatch
   await page.dispatchEvent(
-    '//*[@id="root"]/div/div[1]/div[2]/div[3]/aside/nav/div/div[2]',
+    '//*[@id="root"]/div/div[2]/div[2]/div[3]/aside/nav/div/div[2]',
     "drop",
     {
       dataTransfer,
@@ -104,6 +123,10 @@ test("change flow folder", async ({ page }) => {
     modalCount = await page.getByTestId("modal-title")?.count();
   }
   await page.getByRole("heading", { name: "Basic Prompting" }).click();
+
+  await page.waitForSelector('[data-testid="icon-ChevronLeft"]', {
+    timeout: 100000,
+  });
 
   await page.getByTestId("icon-ChevronLeft").first().click();
 

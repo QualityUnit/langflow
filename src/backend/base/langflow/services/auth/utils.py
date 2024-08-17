@@ -1,3 +1,5 @@
+import base64
+import random
 import warnings
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Coroutine, Optional, Union
@@ -303,7 +305,13 @@ def create_refresh_token(refresh_token: str, db: Session = Depends(get_session))
             )
         user_id: UUID = payload.get("sub")  # type: ignore
         token_type: str = payload.get("type")  # type: ignore
-        if user_id is None or token_type is None:
+
+        if user_id is None or token_type == "":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+        user_exists = get_user_by_id(db, user_id)
+
+        if user_exists is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
         return create_user_tokens(user_id, db)
@@ -336,11 +344,23 @@ def add_padding(s):
     return s + "=" * padding_needed
 
 
+def ensure_valid_key(s: str) -> bytes:
+    # If the key is too short, we'll use it as a seed to generate a valid key
+    if len(s) < 32:
+        # Use the input as a seed for the random number generator
+        random.seed(s)
+        # Generate 32 random bytes
+        key = bytes(random.getrandbits(8) for _ in range(32))
+        key = base64.urlsafe_b64encode(key)
+    else:
+        key = add_padding(s).encode()
+    return key
+
+
 def get_fernet(settings_service=Depends(get_settings_service)):
-    SECRET_KEY = settings_service.auth_settings.SECRET_KEY.get_secret_value()
-    # It's important that your secret key is 32 url-safe base64-encoded byte
-    padded_secret_key = add_padding(SECRET_KEY)
-    fernet = Fernet(padded_secret_key)
+    SECRET_KEY: str = settings_service.auth_settings.SECRET_KEY.get_secret_value()
+    valid_key = ensure_valid_key(SECRET_KEY)
+    fernet = Fernet(valid_key)
     return fernet
 
 
@@ -353,10 +373,11 @@ def encrypt_api_key(api_key: str, settings_service=Depends(get_settings_service)
 
 def decrypt_api_key(encrypted_api_key: str, settings_service=Depends(get_settings_service)):
     fernet = get_fernet(settings_service)
+    decrypted_key = ""
     # Two-way decryption
     if isinstance(encrypted_api_key, str):
-        encoded_bytes = encrypted_api_key.encode()
-    else:
-        encoded_bytes = encrypted_api_key
-    decrypted_key = fernet.decrypt(encoded_bytes).decode()
+        try:
+            decrypted_key = fernet.decrypt(encrypted_api_key.encode()).decode()
+        except Exception:
+            decrypted_key = fernet.decrypt(encrypted_api_key).decode()
     return decrypted_key

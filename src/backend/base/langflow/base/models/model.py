@@ -1,12 +1,16 @@
 import json
 import warnings
-from typing import Optional, Union
+from abc import abstractmethod
+from typing import List, Optional, Union
 
 from langchain_core.language_models.llms import LLM
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
+from langflow.base.constants import STREAM_INFO_TEXT
 from langflow.custom import Component
 from langflow.field_typing import LanguageModel
+from langflow.inputs import MessageInput, MessageTextInput
+from langflow.inputs.inputs import BoolInput, InputTypes
 from langflow.schema.message import Message
 from langflow.template.field.base import Output
 
@@ -15,6 +19,17 @@ class LCModelComponent(Component):
     display_name: str = "Model Name"
     description: str = "Model Description"
     trace_type = "llm"
+
+    _base_inputs: List[InputTypes] = [
+        MessageInput(name="input_value", display_name="Input"),
+        MessageTextInput(
+            name="system_message",
+            display_name="System Message",
+            info="System message to pass to the model.",
+            advanced=True,
+        ),
+        BoolInput(name="stream", display_name="Stream", info=STREAM_INFO_TEXT, advanced=True),
+    ]
 
     outputs = [
         Output(display_name="Text", name="text_output", method="text_response"),
@@ -119,33 +134,46 @@ class LCModelComponent(Component):
         return status_message
 
     def get_chat_result(
-        self, runnable: LanguageModel, stream: bool, input_value: str | Message, system_message: Optional[str] = None
+        self,
+        runnable: LanguageModel,
+        stream: bool,
+        input_value: str | Message,
+        system_message: Optional[str] = None,
     ):
         messages: list[Union[BaseMessage]] = []
         if not input_value and not system_message:
             raise ValueError("The message you want to send to the model is empty.")
-        if system_message:
-            messages.append(SystemMessage(content=system_message))
+        system_message_added = False
         if input_value:
             if isinstance(input_value, Message):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     if "prompt" in input_value:
                         prompt = input_value.load_lc_prompt()
+                        if system_message:
+                            prompt.messages = [SystemMessage(content=system_message)] + prompt.messages
+                            system_message_added = True
                         runnable = prompt | runnable
                     else:
                         messages.append(input_value.to_lc_message())
             else:
                 messages.append(HumanMessage(content=input_value))
+
+        if system_message and not system_message_added:
+            messages.append(SystemMessage(content=system_message))
         inputs: Union[list, dict] = messages or {}
         try:
-            runnable = runnable.with_config(
-                {"run_name": self.display_name, "project_name": self._tracing_service.project_name}
+            runnable = runnable.with_config(  # type: ignore
+                {
+                    "run_name": self.display_name,
+                    "project_name": self._tracing_service.project_name,  # type: ignore
+                    "callbacks": self.get_langchain_callbacks(),
+                }
             )
             if stream:
-                return runnable.stream(inputs)
+                return runnable.stream(inputs)  # type: ignore
             else:
-                message = runnable.invoke(inputs)
+                message = runnable.invoke(inputs)  # type: ignore
                 result = message.content if hasattr(message, "content") else message
                 if isinstance(message, AIMessage):
                     status_message = self.build_status_message(message)
@@ -160,3 +188,9 @@ class LCModelComponent(Component):
             if message := self._get_exception_message(e):
                 raise ValueError(message) from e
             raise e
+
+    @abstractmethod
+    def build_model(self) -> LanguageModel:  # type: ignore[type-var]
+        """
+        Implement this method to build the model.
+        """

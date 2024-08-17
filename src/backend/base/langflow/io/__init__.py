@@ -3,6 +3,7 @@ from langflow.inputs import (
     DataInput,
     DictInput,
     DropdownInput,
+    MultiselectInput,
     FileInput,
     FloatInput,
     HandleInput,
@@ -10,12 +11,15 @@ from langflow.inputs import (
     MessageInput,
     MessageTextInput,
     MultilineInput,
+    MultilineSecretInput,
     NestedDictInput,
     PromptInput,
     SecretStrInput,
     StrInput,
     DynamicMultiSelect,
-    MultiSelect
+    MultiSelect,
+    TableInput,
+    DefaultPromptField,
 )
 from langflow.template import Output
 
@@ -24,12 +28,14 @@ __all__ = [
     "DataInput",
     "DictInput",
     "DropdownInput",
+    "MultiselectInput",
     "FileInput",
     "FloatInput",
     "HandleInput",
     "IntInput",
     "MessageInput",
     "MultilineInput",
+    "MultilineSecretInput",
     "NestedDictInput",
     "PromptInput",
     "SecretStrInput",
@@ -37,5 +43,7 @@ __all__ = [
     "MessageTextInput",
     "Output",
     "DynamicMultiSelect",
-    "MultiSelect"
+    "MultiSelect",
+    "TableInput",
+    "DefaultPromptField",
 ]

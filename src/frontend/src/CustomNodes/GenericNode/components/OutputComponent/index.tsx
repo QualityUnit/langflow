@@ -1,17 +1,5 @@
-import { cloneDeep } from "lodash";
-import { useUpdateNodeInternals } from "reactflow";
-import ForwardedIconComponent from "../../../../components/genericIconComponent";
 import ShadTooltip from "../../../../components/shadTooltipComponent";
-import { Button } from "../../../../components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../../../components/ui/dropdown-menu";
-import useFlowStore from "../../../../stores/flowStore";
 import { outputComponentType } from "../../../../types/components";
-import { NodeDataType } from "../../../../types/flow";
 import { cn } from "../../../../utils/utils";
 
 export default function OutputComponent({
@@ -23,9 +11,6 @@ export default function OutputComponent({
   name,
   proxy,
 }: outputComponentType) {
-  const setNode = useFlowStore((state) => state.setNode);
-  const updateNodeInternals = useUpdateNodeInternals();
-
   const displayProxy = (children) => {
     if (proxy) {
       return (
@@ -44,7 +29,7 @@ export default function OutputComponent({
 
   // ! DEACTIVATED UNTIL BETTER IMPLEMENTATION
   // return (
-  //   <div className="nocopy nopan nodelete nodrag noundo flex items-center gap-2">
+  //   <div className="noflow nopan nodelete nodrag  flex items-center gap-2">
   //     <DropdownMenu>
   //       <DropdownMenuTrigger asChild>
   //         <Button

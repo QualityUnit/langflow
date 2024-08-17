@@ -1,7 +1,5 @@
-import { title } from "process";
 import { Handle, Position } from "reactflow";
 import ShadTooltip from "../../../../components/shadTooltipComponent";
-import { Button } from "../../../../components/ui/button";
 import {
   isValidConnection,
   scapedJSONStringfy,
@@ -21,11 +19,12 @@ export default function HandleRenderComponent({
   colors,
   setFilterEdge,
   showNode,
+  testIdComplement,
 }: {
   left: boolean;
   nodes: any;
   tooltipTitle?: string;
-  proxy: any;
+  proxy?: any;
   id: any;
   title: string;
   edges: any;
@@ -33,12 +32,10 @@ export default function HandleRenderComponent({
   colors: string[];
   setFilterEdge: any;
   showNode: any;
+  testIdComplement?: string;
 }) {
   return (
-    <Button
-      unstyled
-      className="h-7 truncate bg-muted p-0 text-sm font-normal text-black hover:bg-muted"
-    >
+    <div>
       <ShadTooltip
         styleClasses={"tooltip-fixed-width custom-scroll nowheel"}
         delayDuration={1000}
@@ -52,7 +49,7 @@ export default function HandleRenderComponent({
         side={left ? "left" : "right"}
       >
         <Handle
-          data-test-id={`handle-${title.toLowerCase()}-${
+          data-testid={`handle-${testIdComplement}-${title.toLowerCase()}-${
             !showNode ? (left ? "target" : "source") : left ? "left" : "right"
           }`}
           type={left ? "target" : "source"}
@@ -98,6 +95,6 @@ export default function HandleRenderComponent({
           left ? "-left-[4px] -ml-0.5" : "-right-[4px] -mr-0.5",
         )}
       />
-    </Button>
+    </div>
   );
 }

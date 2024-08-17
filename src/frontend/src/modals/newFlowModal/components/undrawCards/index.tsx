@@ -1,19 +1,22 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import BlogPost from "../../../../assets/undraw_blog_post_re_fy5x.svg?react";
 import ChatBot from "../../../../assets/undraw_chat_bot_re_e2gj.svg?react";
 import PromptChaining from "../../../../assets/undraw_cloud_docs_re_xjht.svg?react";
+import HierarchicalTasks from "../../../../assets/undraw_educator_re_ju47.svg?react";
+import ComplexAgent from "../../../../assets/undraw_firmware_re_fgdy.svg?react";
+import SequentialTasks from "../../../../assets/undraw_project_completed_re_jr7u.svg?react";
 import APIRequest from "../../../../assets/undraw_real_time_analytics_re_yliv.svg?react";
 import BasicPrompt from "../../../../assets/undraw_short_bio_re_fmx0.svg?react";
 import TransferFiles from "../../../../assets/undraw_transfer_files_re_a2a9.svg?react";
 
+import useAddFlow from "@/hooks/flows/use-add-flow";
 import {
   Card,
   CardContent,
   CardDescription,
   CardTitle,
 } from "../../../../components/ui/card";
-import useFlowsManagerStore from "../../../../stores/flowsManagerStore";
 import { useFolderStore } from "../../../../stores/foldersStore";
 import { UndrawCardComponentProps } from "../../../../types/components";
 import { updateIds } from "../../../../utils/reactflowUtils";
@@ -21,11 +24,12 @@ import { updateIds } from "../../../../utils/reactflowUtils";
 export default function UndrawCardComponent({
   flow,
 }: UndrawCardComponentProps): JSX.Element {
-  const addFlow = useFlowsManagerStore((state) => state.addFlow);
+  const addFlow = useAddFlow();
   const navigate = useNavigate();
-  const location = useLocation();
-  const folderId = location?.state?.folderId;
-  const setFolderUrl = useFolderStore((state) => state.setFolderUrl);
+  const { folderId } = useParams();
+  const myCollectionId = useFolderStore((state) => state.myCollectionId);
+
+  const folderIdUrl = folderId ?? myCollectionId;
 
   function selectImage() {
     switch (flow.name) {
@@ -89,6 +93,36 @@ export default function UndrawCardComponent({
             preserveAspectRatio="xMidYMid meet"
           />
         );
+      case "Sequential Tasks Agent":
+        return (
+          <SequentialTasks
+            style={{
+              width: "80%",
+              height: "80%",
+            }}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        );
+      case "Hierarchical Tasks Agent":
+        return (
+          <HierarchicalTasks
+            style={{
+              width: "80%",
+              height: "80%",
+            }}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        );
+      case "Complex Agent":
+        return (
+          <ComplexAgent
+            style={{
+              width: "80%",
+              height: "80%",
+            }}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        );
       default:
         return (
           <TransferFiles
@@ -106,9 +140,8 @@ export default function UndrawCardComponent({
     <Card
       onClick={() => {
         updateIds(flow.data!);
-        addFlow(true, flow).then((id) => {
-          setFolderUrl(folderId ?? "");
-          navigate(`/flow/${id}${folderId ? `/folder/${folderId}` : ""}`);
+        addFlow({ flow }).then((id) => {
+          navigate(`/flow/${id}/folder/${folderIdUrl}`);
         });
       }}
       className="h-64 w-80 cursor-pointer bg-background pt-4"

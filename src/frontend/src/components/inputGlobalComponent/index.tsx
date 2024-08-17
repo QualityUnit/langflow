@@ -1,8 +1,10 @@
+import {
+  useDeleteGlobalVariables,
+  useGetGlobalVariables,
+} from "@/controllers/API/queries/variables";
 import { useEffect } from "react";
-import { deleteGlobalVariable } from "../../controllers/API";
 import DeleteConfirmationModal from "../../modals/deleteConfirmationModal";
 import useAlertStore from "../../stores/alertStore";
-import { useGlobalVariablesStore } from "../../stores/globalVariablesStore/globalVariables";
 import { InputGlobalComponentType } from "../../types/components";
 import { cn } from "../../utils/utils";
 import AddNewVariableButton from "../addNewVariableButtonComponent/addNewVariableButton";
@@ -13,67 +15,45 @@ import { CommandItem } from "../ui/command";
 export default function InputGlobalComponent({
   disabled,
   onChange,
-  setDb,
   name,
   data,
   editNode = false,
 }: InputGlobalComponentType): JSX.Element {
-  const globalVariablesEntries = useGlobalVariablesStore(
-    (state) => state.globalVariablesEntries,
-  );
-
-  const getVariableId = useGlobalVariablesStore((state) => state.getVariableId);
-  const unavaliableFields = useGlobalVariablesStore(
-    (state) => state.unavaliableFields,
-  );
-  const removeGlobalVariable = useGlobalVariablesStore(
-    (state) => state.removeGlobalVariable,
-  );
   const setErrorData = useAlertStore((state) => state.setErrorData);
 
-  useEffect(() => {
-    if (data)
-      if (
-        ((globalVariablesEntries &&
-          !globalVariablesEntries.includes(data.value)) ||
-          !globalVariablesEntries) &&
-        data.load_from_db
-      ) {
-        setTimeout(() => {
-          onChange("", true);
-          setDb(false);
-        }, 100);
-      }
-  }, [globalVariablesEntries, data]);
+  const { data: globalVariables } = useGetGlobalVariables();
+  const { mutate: mutateDeleteGlobalVariable } = useDeleteGlobalVariables();
 
   useEffect(() => {
-    if (!data.value && data.display_name) {
-      if (unavaliableFields[data.display_name!] && !disabled) {
-        setTimeout(() => {
-          setDb(true);
-          onChange(unavaliableFields[data.display_name!]);
-        }, 100);
+    if (data && globalVariables)
+      if (
+        data.load_from_db &&
+        !globalVariables.find((variable) => variable.name === data.value)
+      ) {
+        onChange("", false, true);
       }
-    }
-  }, [unavaliableFields]);
+  }, [globalVariables]);
 
   async function handleDelete(key: string) {
-    const id = getVariableId(key);
+    if (!globalVariables) return;
+    const id = globalVariables.find((variable) => variable.name === key)?.id;
     if (id !== undefined) {
-      await deleteGlobalVariable(id)
-        .then(() => {
-          removeGlobalVariable(key);
-          if (data?.value === key && data?.load_from_db) {
-            onChange("");
-            setDb(false);
-          }
-        })
-        .catch(() => {
-          setErrorData({
-            title: "Error deleting variable",
-            list: [cn("ID not found for variable: ", key)],
-          });
-        });
+      mutateDeleteGlobalVariable(
+        { id },
+        {
+          onSuccess: () => {
+            if (data?.value === key && data?.load_from_db) {
+              onChange("", false);
+            }
+          },
+          onError: () => {
+            setErrorData({
+              title: "Error deleting variable",
+              list: [cn("ID not found for variable: ", key)],
+            });
+          },
+        },
+      );
     } else {
       setErrorData({
         title: "Error deleting variable",
@@ -88,7 +68,7 @@ export default function InputGlobalComponent({
       disabled={disabled}
       password={data.password ?? false}
       value={data.value ?? ""}
-      options={globalVariablesEntries}
+      options={globalVariables?.map((variable) => variable.name) ?? []}
       optionsPlaceholder={"Global Variables"}
       optionsIcon="Globe"
       optionsButton={
@@ -131,18 +111,18 @@ export default function InputGlobalComponent({
       )}
       selectedOption={
         data?.load_from_db &&
-        globalVariablesEntries &&
-        globalVariablesEntries.includes(data?.value ?? "")
+        globalVariables &&
+        globalVariables
+          ?.map((variable) => variable.name)
+          .includes(data?.value ?? "")
           ? data?.value
           : ""
       }
       setSelectedOption={(value) => {
-        onChange(value);
-        setDb(value !== "" ? true : false);
+        onChange(value, value !== "" ? true : false);
       }}
       onChange={(value, skipSnapshot) => {
-        onChange(value, skipSnapshot);
-        setDb(false);
+        onChange(value, false, skipSnapshot);
       }}
     />
   );
