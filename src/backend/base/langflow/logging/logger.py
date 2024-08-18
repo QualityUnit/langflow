@@ -13,8 +13,6 @@ from platformdirs import user_cache_dir
 from rich.logging import RichHandler
 from typing_extensions import NotRequired
 
-from langflow.settings import DEV
-
 VALID_LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 

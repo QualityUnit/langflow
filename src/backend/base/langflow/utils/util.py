@@ -11,7 +11,6 @@ from docstring_parser import parse
 
 from langflow.logging.logger import logger
 from langflow.schema import Data
-from langflow.services.deps import get_settings_service
 from langflow.template.frontend_node.constants import FORCE_SHOW_FIELDS
 from langflow.utils import constants
 

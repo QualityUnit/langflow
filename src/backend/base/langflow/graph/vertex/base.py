@@ -15,13 +15,12 @@ from langflow.graph.schema import INPUT_COMPONENTS, OUTPUT_COMPONENTS, Interface
 from langflow.graph.utils import UnbuiltObject, UnbuiltResult, log_transaction
 from langflow.graph.vertex.schema import NodeData
 from langflow.interface import initialize
+from langflow.interface.initialize import loading
 from langflow.interface.listing import lazy_load_dict
 from langflow.schema.artifact import ArtifactType
 from langflow.schema.data import Data
 from langflow.schema.message import Message
 from langflow.schema.schema import INPUT_FIELD_NAME, OutputValue, build_output_logs
-from langflow.services.deps import get_storage_service
-from langflow.services.tracing.schema import Log
 from langflow.utils.constants import DIRECT_TYPES
 from langflow.utils.schemas import ChatOutputResponse
 from langflow.utils.util import sync_to_async, unescape_string
@@ -679,8 +678,8 @@ class Vertex:
         """
         Gets the class from a dictionary and instantiates it with the params.
         """
-        if self.base_type is None:
-            raise ValueError(f"Base type for vertex {self.display_name} not found")
+        # if self.base_type is None:
+        #     raise ValueError(f"Base type for vertex {self.display_name} not found")
         try:
             result = await loading.instantiate_class(
                 vertex=self,

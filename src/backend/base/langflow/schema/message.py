@@ -14,7 +14,7 @@ from pydantic import BeforeValidator, ConfigDict, Field, field_serializer, field
 
 from langflow.base.prompts.utils import dict_values_to_string
 from langflow.schema.data import Data
-from langflow.schema.image import Image, get_file_paths, is_image_file
+from langflow.schema.image import Image
 from langflow.utils.constants import (
     MESSAGE_SENDER_AI,
     MESSAGE_SENDER_NAME_AI,

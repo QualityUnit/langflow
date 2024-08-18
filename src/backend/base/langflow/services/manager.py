@@ -143,7 +143,7 @@ class ServiceManager:
         return factories
 
 
-service_manager = ServiceManager()
+# service_manager = ServiceManager()
 
 
 def initialize_settings_service():

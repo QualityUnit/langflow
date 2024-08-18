@@ -36,9 +36,10 @@ class VertexTypesDict(LazyLoadDictBase):
         return self._types().CustomComponentVertex
 
     def get_type_dict(self):
-        return {
-            **{t: types.CustomComponentVertex for t in custom_component_creator.to_list()},
-        }
+        return {}
+        # return {
+        #     **{t: types.CustomComponentVertex for t in custom_component_creator.to_list()},
+        # }
 
 
 lazy_load_vertex_dict = VertexTypesDict()

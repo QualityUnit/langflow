@@ -30,7 +30,6 @@ from langflow.schema import Data
 from langflow.schema.schema import INPUT_FIELD_NAME, InputType
 from langflow.services.cache.utils import CacheMiss
 from langflow.services.chat.schema import GetCache, SetCache
-from langflow.services.deps import get_chat_service, get_tracing_service
 
 from langflow.graph.vertex.types import CustomComponentVertex
 
@@ -68,10 +67,7 @@ class Graph:
         self._prepared = False
         self._runs = 0
         self._updates = 0
-        self.flow_id = flow_id
-        self.flow_name = flow_name
         self.description = description
-        self.user_id = user_id
         self._is_input_vertices: List[str] = []
         self._is_output_vertices: List[str] = []
         self._is_state_vertices: List[str] = []
@@ -84,6 +80,7 @@ class Graph:
         self.vertices_layers: List[List[str]] = []
         self.vertices_to_run: set[str] = set()
         self.stop_vertex: Optional[str] = None
+        self.global_flow_params = global_flow_params
         self.inactive_vertices: set = set()
         self.edges: List[CycleEdge] = []
         self.vertices: List[Vertex] = []
@@ -592,7 +589,7 @@ class Graph:
         try:
             # Prioritize the webhook component if it exists
             start_component_id = find_start_component_id(self._is_input_vertices)
-            await self.process(start_component_id=start_component_id, fallback_to_env_vars=fallback_to_env_vars)
+            await self.process(start_component_id=start_component_id)
             self.increment_run_count()
         except Exception as exc:
             asyncio.create_task(self.end_all_traces(error=exc))
@@ -1258,19 +1255,19 @@ class Graph:
 
             if should_build:
                 await vertex.build(
-                    user_id=user_id, inputs=inputs_dict, fallback_to_env_vars=fallback_to_env_vars, files=files
+                    user_id=user_id, inputs=inputs_dict, files=files
                 )
-                if set_cache is not None:
-                    vertex_dict = {
-                        "_built": vertex._built,
-                        "results": vertex.results,
-                        "artifacts": vertex.artifacts,
-                        "_built_object": vertex._built_object,
-                        "_built_result": vertex._built_result,
-                        "_data": vertex._data,
-                    }
-
-                    await set_cache(key=vertex.id, data=vertex_dict)
+                # if set_cache is not None:
+                #     vertex_dict = {
+                #         "_built": vertex._built,
+                #         "results": vertex.results,
+                #         "artifacts": vertex.artifacts,
+                #         "_built_object": vertex._built_object,
+                #         "_built_result": vertex._built_result,
+                #         "_data": vertex._data,
+                #     }
+                #
+                #     await set_cache(key=vertex.id, data=vertex_dict)
 
             if vertex.result is not None:
                 params = f"{vertex._built_object_repr()}{params}"
