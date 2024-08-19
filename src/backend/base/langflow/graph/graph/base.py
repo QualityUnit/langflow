@@ -49,6 +49,7 @@ class Graph:
         global_flow_params: Optional[Any] = None,
         description: Optional[str] = None,
         log_config: Optional[LogConfig] = None,
+        flow_id: Optional[str] = None,
     ) -> None:
         """
         Initializes a new instance of the Graph class.
@@ -61,6 +62,7 @@ class Graph:
         if not log_config:
             log_config = {"disable": False}
         configure(**log_config)
+        self.flow_id = flow_id
         self._start = start
         self._state_model = None
         self._end = end
@@ -1270,7 +1272,7 @@ class Graph:
                 #     await set_cache(key=vertex.id, data=vertex_dict)
 
             if vertex.result is not None:
-                params = f"{vertex._built_object_repr()}{params}"
+                params = "Built successfully ✨"
                 valid = True
                 result_dict = vertex.result
                 artifacts = vertex.artifacts
@@ -1402,7 +1404,7 @@ class Graph:
             self.run_manager.remove_vertex_from_runnables(v.id)
 
         for v in vertices:
-            next_runnable_vertices = await self.get_next_runnable_vertices(lock, vertex=v, cache=False)
+            next_runnable_vertices = await self.get_next_runnable_vertices(self._lock, vertex=v, cache=False)
             results.extend(next_runnable_vertices)
         no_duplicate_results = list(set(results))
         return no_duplicate_results

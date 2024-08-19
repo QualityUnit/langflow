@@ -615,7 +615,7 @@ class Vertex:
             self._extend_params_list_with_result(key, result)
         # Added Manually by Flowhunt
         # Picking only params needed for this vertex
-        needed_keys = [e.source_handle.name for e in self.incoming_edges if e.source_handle.id == vertex.id and e.target_handle.fieldName == key]
+        needed_keys = [e.source_handle.name for e in self.incoming_edges if e.source_handle.id == vertex.id and e.target_handle.field_name == key]
         if len(needed_keys) == 1 and isinstance(result, dict):
             self.params[key] = result[needed_keys[0]]
         else:

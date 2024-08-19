@@ -1,5 +1,5 @@
 import enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, field_validator, model_validator
@@ -20,7 +20,7 @@ class File(TypedDict):
 class ChatOutputResponse(BaseModel):
     """Chat output response schema."""
 
-    message: Union[str, List[Union[str, Dict]]]
+    message: Any
     sender: Optional[str] = MESSAGE_SENDER_AI
     sender_name: Optional[str] = MESSAGE_SENDER_NAME_AI
     session_id: Optional[str] = None

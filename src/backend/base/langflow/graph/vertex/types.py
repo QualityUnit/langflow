@@ -154,6 +154,8 @@ class ComponentVertex(Vertex):
         messages = []
         for key in artifacts:
             artifact = artifacts[key]
+            if isinstance(artifact, (AsyncIterator, Iterator)):
+                continue
             if any(
                 key not in artifact for key in ["text", "sender", "sender_name", "session_id", "stream_url"]
             ) and not isinstance(artifact, Message):
@@ -263,7 +265,7 @@ class InterfaceVertex(ComponentVertex):
         if "text" in self.results:
             text_output = self.results["text"]
         elif "message" in self.results:
-            text_output = self.results["message"].text
+            text_output = self.results["message"]
         else:
             text_output = message
         if isinstance(text_output, (AIMessage, AIMessageChunk)):
@@ -280,11 +282,7 @@ class InterfaceVertex(ComponentVertex):
             elif isinstance(text_output, Data):
                 message = text_output.text
             elif isinstance(message, (AsyncIterator, Iterator)):
-                stream_url = self.build_stream_url()
-                message = ""
-                self.results["text"] = message
-                self.results["message"].text = message
-                self._built_object = self.results
+                message = text_output
             elif not isinstance(text_output, str):
                 message = str(text_output)
             # if the message is a generator or iterator
