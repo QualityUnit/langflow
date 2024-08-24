@@ -1,6 +1,6 @@
 import uuid
 import warnings
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Dict
 
 from fastapi import HTTPException
 from sqlmodel import Session
@@ -12,7 +12,6 @@ from langflow.services.store.schema import StoreComponentCreate
 from langflow.services.store.utils import get_lf_version_from_pypi
 
 if TYPE_CHECKING:
-    from langflow.graph.vertex.base import Vertex
     from langflow.services.database.models.flow.model import Flow
 
 
@@ -123,12 +122,9 @@ def format_elapsed_time(elapsed_time: float) -> str:
         return f"{minutes} {minutes_unit}, {seconds} {seconds_unit}"
 
 
-async def build_graph_from_db(flow_id: str, session: Session, chat_service: "ChatService"):
+async def build_graph_from_data(flow_id: str, payload: Dict, **kwargs):
     """Build and cache the graph."""
-    flow: Optional[Flow] = session.get(Flow, flow_id)
-    if not flow or not flow.data:
-        raise ValueError("Invalid flow ID")
-    graph = Graph.from_payload(flow.data, flow_id, flow_name=flow.name, user_id=str(flow.user_id))
+    graph = Graph.from_payload(payload, flow_id, **kwargs)
     for vertex_id in graph._has_session_id_vertices:
         vertex = graph.get_vertex(vertex_id)
         if vertex is None:
@@ -140,6 +136,19 @@ async def build_graph_from_db(flow_id: str, session: Session, chat_service: "Cha
     graph.set_run_id(run_id)
     graph.set_run_name()
     await graph.initialize_run()
+    return graph
+
+
+async def build_graph_from_db_no_cache(flow_id: str, session: Session):
+    """Build and cache the graph."""
+    flow: Optional[Flow] = session.get(Flow, flow_id)
+    if not flow or not flow.data:
+        raise ValueError("Invalid flow ID")
+    return await build_graph_from_data(flow_id, flow.data, flow_name=flow.name, user_id=str(flow.user_id))
+
+
+async def build_graph_from_db(flow_id: str, session: Session, chat_service: "ChatService"):
+    graph = await build_graph_from_db_no_cache(flow_id, session)
     await chat_service.set_cache(flow_id, graph)
     return graph
 
@@ -179,43 +188,6 @@ def format_exception_message(exc: Exception) -> str:
     return str(exc)
 
 
-async def get_next_runnable_vertices(
-    graph: Graph,
-    vertex: "Vertex",
-    vertex_id: str,
-    chat_service: ChatService,
-    flow_id: str,
-):
-    """
-    Retrieves the next runnable vertices in the graph for a given vertex.
-
-    Args:
-        graph (Graph): The graph object representing the flow.
-        vertex (Vertex): The current vertex.
-        vertex_id (str): The ID of the current vertex.
-        chat_service (ChatService): The chat service object.
-        flow_id (str): The ID of the flow.
-
-    Returns:
-        list: A list of IDs of the next runnable vertices.
-
-    """
-    async with chat_service._cache_locks[flow_id] as lock:
-        graph.remove_from_predecessors(vertex_id)
-        direct_successors_ready = [v for v in vertex.successors_ids if graph.is_vertex_runnable(v)]
-        if not direct_successors_ready:
-            # No direct successors ready, look for runnable predecessors of successors
-            next_runnable_vertices = graph.find_runnable_predecessors_for_successors(vertex_id)
-        else:
-            next_runnable_vertices = direct_successors_ready
-
-        for v_id in set(next_runnable_vertices):  # Use set to avoid duplicates
-            graph.vertices_to_run.remove(v_id)
-            graph.remove_from_predecessors(v_id)
-        await chat_service.set_cache(key=flow_id, data=graph, lock=lock)
-    return next_runnable_vertices
-
-
 def get_top_level_vertices(graph, vertices_ids):
     """
     Retrieves the top-level vertices from the given graph based on the provided vertex IDs.
@@ -243,3 +215,15 @@ def parse_exception(exc):
     if hasattr(exc, "body"):
         return exc.body["message"]
     return str(exc)
+
+
+def get_suggestion_message(outdated_components: list[str]) -> str:
+    """Get the suggestion message for the outdated components."""
+    count = len(outdated_components)
+    if count == 0:
+        return "The flow contains no outdated components."
+    elif count == 1:
+        return f"The flow contains 1 outdated component. We recommend updating the following component: {outdated_components[0]}."
+    else:
+        components = ", ".join(outdated_components)
+        return f"The flow contains {count} outdated components. We recommend updating the following components: {components}."

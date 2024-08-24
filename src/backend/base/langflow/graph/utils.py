@@ -1,5 +1,7 @@
+import json
 from enum import Enum
-from typing import Any, Generator, Union
+from typing import TYPE_CHECKING, Any, Generator, Union, Optional
+from uuid import UUID
 
 from langchain_core.documents import Document
 from pydantic import BaseModel
@@ -7,6 +9,11 @@ from pydantic import BaseModel
 from langflow.interface.utils import extract_input_variables_from_prompt
 from langflow.schema.data import Data
 from langflow.schema.message import Message
+from loguru import logger
+
+if TYPE_CHECKING:
+    from langflow.graph.vertex.base import Vertex
+    from langflow.api.v1.schemas import ResultDataResponse
 
 
 class UnbuiltObject:
@@ -98,3 +105,70 @@ def post_process_raw(raw, artifact_type: str):
         raw = ""
 
     return raw
+
+
+def _vertex_to_primitive_dict(target: "Vertex") -> dict:
+    """
+    Cleans the parameters of the target vertex.
+    """
+    # Removes all keys that the values aren't python types like str, int, bool, etc.
+    params = {
+        key: value for key, value in target.params.items() if isinstance(value, (str, int, bool, float, list, dict))
+    }
+    # if it is a list we need to check if the contents are python types
+    for key, value in params.items():
+        if isinstance(value, list):
+            params[key] = [item for item in value if isinstance(item, (str, int, bool, float, list, dict))]
+    return params
+
+
+async def log_transaction(
+    flow_id: Union[str, UUID], source: "Vertex", status, target: Optional["Vertex"] = None, error=None
+) -> None:
+    try:
+        if not get_settings_service().settings.transactions_storage_enabled:
+            return
+        inputs = _vertex_to_primitive_dict(source)
+        transaction = TransactionBase(
+            vertex_id=source.id,
+            target_id=target.id if target else None,
+            inputs=inputs,
+            # ugly hack to get the model dump with weird datatypes
+            outputs=json.loads(source.result.model_dump_json()) if source.result else None,
+            status=status,
+            error=error,
+            flow_id=flow_id if isinstance(flow_id, UUID) else UUID(flow_id),
+        )
+        with session_getter(get_db_service()) as session:
+            inserted = crud_log_transaction(session, transaction)
+            logger.debug(f"Logged transaction: {inserted.id}")
+    except Exception as e:
+        logger.error(f"Error logging transaction: {e}")
+
+
+def log_vertex_build(
+    flow_id: str,
+    vertex_id: str,
+    valid: bool,
+    params: Any,
+    data: "ResultDataResponse",
+    artifacts: Optional[dict] = None,
+):
+    try:
+        if not get_settings_service().settings.vertex_builds_storage_enabled:
+            return
+        vertex_build = VertexBuildBase(
+            flow_id=flow_id,
+            id=vertex_id,
+            valid=valid,
+            params=str(params) if params else None,
+            # ugly hack to get the model dump with weird datatypes
+            data=json.loads(data.model_dump_json()),
+            # ugly hack to get the model dump with weird datatypes
+            artifacts=json.loads(json.dumps(artifacts, default=str)),
+        )
+        with session_getter(get_db_service()) as session:
+            inserted = crud_log_vertex_build(session, vertex_build)
+            logger.debug(f"Logged vertex build: {inserted.build_id}")
+    except Exception as e:
+        logger.exception(f"Error logging vertex build: {e}")

@@ -1,11 +1,13 @@
-from langchain_experimental.sql.base import SQLDatabase
-
+from langchain_community.utilities.sql_database import SQLDatabase
 from langflow.custom import CustomComponent
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 
 
 class SQLDatabaseComponent(CustomComponent):
     display_name = "SQLDatabase"
     description = "SQL Database"
+    name = "SQLDatabase"
 
     def build_config(self):
         return {
@@ -13,10 +15,12 @@ class SQLDatabaseComponent(CustomComponent):
         }
 
     def clean_up_uri(self, uri: str) -> str:
-        if uri.startswith("postgresql://"):
-            uri = uri.replace("postgresql://", "postgres://")
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://")
         return uri.strip()
 
     def build(self, uri: str) -> SQLDatabase:
         uri = self.clean_up_uri(uri)
-        return SQLDatabase.from_uri(uri)
+        # Create an engine using SQLAlchemy with StaticPool
+        engine = create_engine(uri, poolclass=StaticPool)
+        return SQLDatabase(engine)

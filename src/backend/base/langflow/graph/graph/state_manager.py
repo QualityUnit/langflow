@@ -2,8 +2,6 @@ from typing import TYPE_CHECKING, Callable
 
 from loguru import logger
 
-from langflow.services.deps import get_settings_service, get_state_service
-
 if TYPE_CHECKING:
     from langflow.services.state.service import StateService
 

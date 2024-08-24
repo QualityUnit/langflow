@@ -1,6 +1,7 @@
 from langchain_openai.embeddings.base import OpenAIEmbeddings
 
 from langflow.base.embeddings.model import LCEmbeddingsModel
+from langflow.base.models.openai_constants import OPENAI_EMBEDDING_MODEL_NAMES
 from langflow.field_typing import Embeddings
 from langflow.io import BoolInput, DictInput, DropdownInput, FloatInput, IntInput, MessageTextInput, SecretStrInput
 
@@ -9,6 +10,8 @@ class OpenAIEmbeddingsComponent(LCEmbeddingsModel):
     display_name = "OpenAI Embeddings"
     description = "Generate embeddings using OpenAI models."
     icon = "OpenAI"
+    name = "OpenAIEmbeddings"
+
     inputs = [
         DictInput(
             name="default_headers",
@@ -31,16 +34,12 @@ class OpenAIEmbeddingsComponent(LCEmbeddingsModel):
             name="model",
             display_name="Model",
             advanced=False,
-            options=[
-                "text-embedding-3-small",
-                "text-embedding-3-large",
-                "text-embedding-ada-002",
-            ],
+            options=OPENAI_EMBEDDING_MODEL_NAMES,
             value="text-embedding-3-small",
         ),
         DictInput(name="model_kwargs", display_name="Model Kwargs", advanced=True),
         SecretStrInput(name="openai_api_base", display_name="OpenAI API Base", advanced=True),
-        SecretStrInput(name="openai_api_key", display_name="OpenAI API Key"),
+        SecretStrInput(name="openai_api_key", display_name="OpenAI API Key", value="OPENAI_API_KEY"),
         SecretStrInput(name="openai_api_type", display_name="OpenAI API Type", advanced=True),
         MessageTextInput(name="openai_api_version", display_name="OpenAI API Version", advanced=True),
         MessageTextInput(
@@ -63,6 +62,12 @@ class OpenAIEmbeddingsComponent(LCEmbeddingsModel):
             advanced=True,
             value=True,
             info="If False, you must have transformers installed.",
+        ),
+        IntInput(
+            name="dimensions",
+            display_name="Dimensions",
+            info="The number of dimensions the resulting output embeddings should have. Only supported by certain models.",
+            advanced=True,
         ),
     ]
 
@@ -89,4 +94,5 @@ class OpenAIEmbeddingsComponent(LCEmbeddingsModel):
             show_progress_bar=self.show_progress_bar,
             skip_empty=self.skip_empty,
             tiktoken_model_name=self.tiktoken_model_name,
+            dimensions=self.dimensions or None,
         )

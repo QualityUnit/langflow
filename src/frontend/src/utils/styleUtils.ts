@@ -1,3 +1,6 @@
+import { AIMLIcon } from "@/icons/AIML";
+import { AthenaIcon } from "@/icons/athena/index";
+import { freezeAllIcon } from "@/icons/freezeAll";
 import {
   AlertCircle,
   AlertTriangle,
@@ -14,6 +17,7 @@ import {
   Braces,
   BrainCircuit,
   Check,
+  CheckCheck,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
@@ -95,6 +99,7 @@ import {
   MoonIcon,
   MoreHorizontal,
   Network,
+  OptionIcon,
   Package2,
   Palette,
   Paperclip,
@@ -132,6 +137,7 @@ import {
   SquarePen,
   Store,
   SunIcon,
+  Table,
   TerminalIcon,
   TerminalSquare,
   TextCursorInput,
@@ -167,12 +173,16 @@ import { BotMessageSquareIcon } from "../icons/BotMessageSquare";
 import { CassandraIcon } from "../icons/Cassandra";
 import { ChromaIcon } from "../icons/ChromaIcon";
 import { CohereIcon } from "../icons/Cohere";
+import { ComposioIcon } from "../icons/Composio";
+import { ConfluenceIcon } from "../icons/Confluence";
 import { CouchbaseIcon } from "../icons/Couchbase";
+import { CrewAiIcon } from "../icons/CrewAI";
 import { ElasticsearchIcon } from "../icons/ElasticsearchStore";
 import { EvernoteIcon } from "../icons/Evernote";
 import { FBIcon } from "../icons/FacebookMessenger";
 import { FirecrawlIcon } from "../icons/Firecrawl";
 import { GitBookIcon } from "../icons/GitBook";
+import { GitLoaderIcon } from "../icons/GitLoader";
 import { GoogleIcon } from "../icons/Google";
 import { GoogleGenerativeAIIcon } from "../icons/GoogleGenerativeAI";
 import {
@@ -184,10 +194,12 @@ import { GroqIcon } from "../icons/Groq";
 import { HuggingFaceIcon } from "../icons/HuggingFace";
 import { IFixIcon } from "../icons/IFixIt";
 import { LangChainIcon } from "../icons/LangChain";
+import { MaritalkIcon } from "../icons/Maritalk";
 import { MetaIcon } from "../icons/Meta";
 import { MidjourneyIcon } from "../icons/Midjorney";
 import { MongoDBIcon } from "../icons/MongoDB";
 import { NotionIcon } from "../icons/Notion";
+import { NvidiaIcon } from "../icons/Nvidia";
 import { OllamaIcon } from "../icons/Ollama";
 import { OpenAiIcon } from "../icons/OpenAi";
 import { PineconeIcon } from "../icons/Pinecone";
@@ -200,6 +212,7 @@ import { SearxIcon } from "../icons/Searx";
 import { ShareIcon } from "../icons/Share";
 import { Share2Icon } from "../icons/Share2";
 import SvgSlackIcon from "../icons/Slack/SlackIcon";
+import { SpiderIcon } from "../icons/Spider";
 import { Streamlit } from "../icons/Streamlit";
 import { UpstashSvgIcon } from "../icons/Upstash";
 import { VectaraIcon } from "../icons/VectaraIcon";
@@ -271,6 +284,7 @@ export const nodeColors: { [char: string]: string } = {
   wrappers: "#E6277A",
   helpers: "#31A3CC",
   prototypes: "#E6277A",
+  astra_assistants: "#272541",
   langchain_utilities: "#31A3CC",
   output_parsers: "#E6A627",
   // custom_components: "#ab11ab",
@@ -312,6 +326,7 @@ export const nodeNames: { [char: string]: string } = {
   retrievers: "Retrievers",
   helpers: "Helpers",
   prototypes: "Prototypes",
+  astra_assistants: "Astra Assistants",
   langchain_utilities: "Utilities",
   output_parsers: "Output Parsers",
   custom_components: "Custom",
@@ -338,6 +353,7 @@ export const nodeIconsLucide: iconsType = {
   OllamaEmbeddings: OllamaIcon,
   ChatOllamaModel: OllamaIcon,
   FAISS: MetaIcon,
+  Maritalk: MaritalkIcon,
   FaissSearch: MetaIcon,
   LangChain: LangChainIcon,
   AzureOpenAiModel: AzureIcon,
@@ -378,12 +394,16 @@ export const nodeIconsLucide: iconsType = {
   HuggingFace: HuggingFaceIcon,
   HuggingFaceEmbeddings: HuggingFaceIcon,
   IFixitLoader: IFixIcon,
+  CrewAI: CrewAiIcon,
+  Composio: ComposioIcon,
   Meta: MetaIcon,
+  CheckCheck,
   Midjorney: MidjourneyIcon,
   MongoDBAtlasVectorSearch: MongoDBIcon,
   MongoDB: MongoDBIcon,
   MongoDBChatMessageHistory: MongoDBIcon,
   NotionDirectoryLoader: NotionIcon,
+  NVIDIA: NvidiaIcon,
   ChatOpenAI: OpenAiIcon,
   AzureChatOpenAI: OpenAiIcon,
   OpenAI: OpenAiIcon,
@@ -394,6 +414,7 @@ export const nodeIconsLucide: iconsType = {
   Weaviate: WeaviateIcon,
   Searx: SearxIcon,
   SlackDirectoryLoader: SvgSlackIcon,
+  SpiderTool: SpiderIcon,
   SupabaseVectorStore: SupabaseIcon,
   Supabase: SupabaseIcon,
   VertexAI: VertexAIIcon,
@@ -424,6 +445,7 @@ export const nodeIconsLucide: iconsType = {
   textsplitters: Scissors,
   wrappers: Gift,
   helpers: Wand2,
+  astra_assistants: Sparkles,
   ScanEye,
   prototypes: FlaskConical,
   langchain_utilities: PocketKnife,
@@ -568,4 +590,13 @@ export const nodeIconsLucide: iconsType = {
   MistralAI: MistralIcon,
   Upstash: UpstashSvgIcon,
   PGVector: CpuIcon,
+  Confluence: ConfluenceIcon,
+  FreezeAll: freezeAllIcon,
+  Table: Table,
+  AIML: AIMLIcon,
+  "AI/ML": AIMLIcon,
+  GitLoader: GitLoaderIcon,
+  athenaIcon: AthenaIcon,
+  OptionIcon: OptionIcon,
+  Option: OptionIcon,
 };

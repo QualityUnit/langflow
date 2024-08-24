@@ -22,10 +22,12 @@ from langflow.api.v1.schemas import (
     UploadFileResponse,
 )
 from langflow.custom.custom_component.component import Component
-from langflow.custom.utils import build_custom_component_template
+from langflow.custom.utils import build_custom_component_template, get_instance_name
+from langflow.exceptions.api import APIException, InvalidChatInputException
 from langflow.graph.graph.base import Graph
 from langflow.graph.schema import RunOutputs
 from langflow.helpers.flow import get_flow_by_id_or_endpoint_name
+from langflow.interface.initialize.loading import update_params_with_load_from_db_fields
 from langflow.processing.process import process_tweaks, run_graph_internal
 from langflow.schema.graph import Tweaks
 from langflow.services.auth.utils import api_key_security, get_current_active_user
@@ -74,12 +76,40 @@ async def get_all(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+def validate_input_and_tweaks(input_request: SimplifiedAPIRequest):
+    # If the input_value is not None and the input_type is "chat"
+    # then we need to check the tweaks if the ChatInput component is present
+    # and if its input_value is not None
+    # if so, we raise an error
+    if input_request.tweaks is None:
+        return
+    for key, value in input_request.tweaks.items():
+        if "ChatInput" in key or "Chat Input" in key:
+            if isinstance(value, dict):
+                has_input_value = value.get("input_value") is not None
+                input_value_is_chat = input_request.input_value is not None and input_request.input_type == "chat"
+                if has_input_value and input_value_is_chat:
+                    raise InvalidChatInputException(
+                        "If you pass an input_value to the chat input, you cannot pass a tweak with the same name."
+                    )
+        elif "Text Input" in key or "TextInput" in key:
+            if isinstance(value, dict):
+                has_input_value = value.get("input_value") is not None
+                input_value_is_text = input_request.input_value is not None and input_request.input_type == "text"
+                if has_input_value and input_value_is_text:
+                    raise InvalidChatInputException(
+                        "If you pass an input_value to the text input, you cannot pass a tweak with the same name."
+                    )
+
+
 async def simple_run_flow(
     flow: Flow,
     input_request: SimplifiedAPIRequest,
     stream: bool = False,
     api_key_user: Optional[User] = None,
 ):
+    if input_request.input_value is not None and input_request.tweaks is not None:
+        validate_input_and_tweaks(input_request)
     try:
         task_result: List[RunOutputs] = []
         user_id = api_key_user.id if api_key_user else None
@@ -214,11 +244,13 @@ async def simplified_run_flow(
         return result
 
     except ValueError as exc:
-        end_time = time.perf_counter()
         background_tasks.add_task(
             telemetry_service.log_package_run,
             RunPayload(
-                runIsWebhook=False, runSeconds=int(end_time - start_time), runSuccess=False, runErrorMessage=str(exc)
+                runIsWebhook=False,
+                runSeconds=int(time.perf_counter() - start_time),
+                runSuccess=False,
+                runErrorMessage=str(exc),
             ),
         )
         if "badly formed hexadecimal UUID string" in str(exc):
@@ -228,16 +260,23 @@ async def simplified_run_flow(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
         else:
             logger.exception(exc)
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+            raise APIException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, exception=exc, flow=flow) from exc
+    except InvalidChatInputException as exc:
+        logger.error(exc)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception(exc)
         background_tasks.add_task(
             telemetry_service.log_package_run,
             RunPayload(
-                runIsWebhook=False, runSeconds=int(end_time - start_time), runSuccess=False, runErrorMessage=str(exc)
+                runIsWebhook=False,
+                runSeconds=int(time.perf_counter() - start_time),
+                runSuccess=False,
+                runErrorMessage=str(exc),
             ),
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+        logger.exception(exc)
+        raise APIException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, exception=exc, flow=flow) from exc
 
 
 @router.post("/webhook/{flow_id_or_name}", response_model=dict, status_code=HTTPStatus.ACCEPTED)
@@ -276,15 +315,15 @@ async def webhook_run_flow(
         # get all webhook components in the flow
         webhook_components = get_all_webhook_components_in_flow(flow.data)
         tweaks = {}
-        data_dict = await request.json()
+
         for component in webhook_components:
             tweaks[component["id"]] = {"data": data.decode() if isinstance(data, bytes) else data}
         input_request = SimplifiedAPIRequest(
-            input_value=data_dict.get("input_value", ""),
-            input_type=data_dict.get("input_type", "chat"),
-            output_type=data_dict.get("output_type", "chat"),
+            input_value="",
+            input_type="chat",
+            output_type="chat",
             tweaks=tweaks,
-            session_id=data_dict.get("session_id"),
+            session_id=None,
         )
         logger.debug("Starting background task")
         background_tasks.add_task(  # type: ignore
@@ -514,12 +553,14 @@ async def custom_component(
     raw_code: CustomComponentRequest,
     user: User = Depends(get_current_active_user),
 ):
-    component = Component(code=raw_code.code)
+    component = Component(_code=raw_code.code)
 
     built_frontend_node, component_instance = build_custom_component_template(component, user_id=user.id)
     if raw_code.frontend_node is not None:
         built_frontend_node = component_instance.post_code_processing(built_frontend_node, raw_code.frontend_node)
-    return CustomComponentResponse(data=built_frontend_node, type=component_instance.__class__.__name__)
+
+    _type = get_instance_name(component_instance)
+    return CustomComponentResponse(data=built_frontend_node, type=_type)
 
 
 @router.post("/custom_component/update", status_code=HTTPStatus.OK)
@@ -542,15 +583,27 @@ async def custom_component_update(
 
     """
     try:
-        component = Component(code=code_request.code)
+        component = Component(_code=code_request.code)
 
         component_node, cc_instance = build_custom_component_template(
             component,
             user_id=user.id,
         )
-
-        updated_build_config = cc_instance.update_build_config(
-            build_config=code_request.get_template(),
+        if hasattr(cc_instance, "set_attributes"):
+            template = code_request.get_template()
+            params = {
+                key: value_dict.get("value") for key, value_dict in template.items() if isinstance(value_dict, dict)
+            }
+            load_from_db_fields = [
+                field_name
+                for field_name, field_dict in template.items()
+                if isinstance(field_dict, dict) and field_dict.get("load_from_db")
+            ]
+            params = update_params_with_load_from_db_fields(cc_instance, params, load_from_db_fields)
+            cc_instance.set_attributes(params)
+        updated_build_config = code_request.get_template()
+        cc_instance.update_build_config(
+            build_config=updated_build_config,
             field_value=code_request.field_value,
             field_name=code_request.field,
         )

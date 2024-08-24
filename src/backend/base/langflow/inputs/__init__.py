@@ -1,15 +1,19 @@
 from .inputs import (
     BoolInput,
     DataInput,
+    DefaultPromptField,
     DictInput,
     DropdownInput,
     FileInput,
     FloatInput,
     HandleInput,
+    Input,
     IntInput,
     MessageInput,
     MessageTextInput,
     MultilineInput,
+    MultilineSecretInput,
+    MultiselectInput,
     NestedDictInput,
     PromptInput,
     SecretStrInput,
@@ -17,6 +21,7 @@ from .inputs import (
     DynamicMultiSelect,
     DynamicSingleSelect,
     MultiSelect,
+    TableInput,
 )
 
 __all__ = [
@@ -24,12 +29,14 @@ __all__ = [
     "DataInput",
     "DictInput",
     "DropdownInput",
+    "MultiselectInput",
     "FileInput",
     "FloatInput",
     "HandleInput",
     "IntInput",
     "MessageInput",
     "MultilineInput",
+    "MultilineSecretInput",
     "NestedDictInput",
     "PromptInput",
     "SecretStrInput",
@@ -37,5 +44,8 @@ __all__ = [
     "MessageTextInput",
     "DynamicMultiSelect",
     "DynamicSingleSelect",
-    "MultiSelect"
+    "MultiSelect",
+    "TableInput",
+    "Input",
+    "DefaultPromptField",
 ]

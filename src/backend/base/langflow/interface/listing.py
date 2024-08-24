@@ -1,4 +1,3 @@
-from langflow.services.deps import get_settings_service
 from langflow.utils.lazy_load import LazyLoadDictBase
 
 
@@ -11,10 +10,10 @@ class AllTypesDict(LazyLoadDictBase):
         return self.all_types_dict
 
     def _build_dict(self):
-        langchain_types_dict = self.get_type_dict()
+        # langchain_types_dict = self.get_type_dict()
         return {
-            **langchain_types_dict,
-            "Custom": ["Custom Tool", "Python Function"],
+            # **langchain_types_dict,
+            # "Custom": ["Custom Tool", "Python Function"],
         }
 
     def get_type_dict(self):

@@ -3,8 +3,6 @@ import base64
 from PIL import Image as PILImage
 from pydantic import BaseModel
 
-from langflow.services.deps import get_storage_service
-
 IMAGE_ENDPOINT = "/files/images/"
 
 
@@ -15,33 +13,6 @@ def is_image_file(file_path):
         return True
     except (IOError, SyntaxError):
         return False
-
-
-async def get_file_paths(files: list[str]):
-    storage_service = get_storage_service()
-    file_paths = []
-    for file in files:
-        flow_id, file_name = file.split("/")
-        file_paths.append(storage_service.build_full_path(flow_id=flow_id, file_name=file_name))
-    return file_paths
-
-
-async def get_files(
-    file_paths: list[str],
-    convert_to_base64: bool = False,
-):
-    storage_service = get_storage_service()
-    file_objects: list[str | bytes] = []
-    for file_path in file_paths:
-        flow_id, file_name = file_path.split("/")
-        file_object = await storage_service.get_file(flow_id=flow_id, file_name=file_name)
-        if convert_to_base64:
-            file_base64 = base64.b64encode(file_object).decode("utf-8")
-            file_objects.append(file_base64)
-        else:
-            file_objects.append(file_object)
-    return file_objects
-
 
 class Image(BaseModel):
     path: str | None = None

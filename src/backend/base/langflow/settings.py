@@ -3,12 +3,13 @@ import json
 import os
 from pathlib import Path
 from typing import List, Optional, Dict
+import logging
 
 import yaml
 from pydantic import model_validator, validator, BaseModel
 from pydantic_settings import BaseSettings
 
-from langflow.utils.logger import logger
+logger = logging.getLogger(__name__)
 
 # component config path
 COMPONENT_CONFIG_PATH = os.getenv("COMPONENT_CONFIG_PATH", str(Path(__file__).parent / "flow_components.yaml"))
