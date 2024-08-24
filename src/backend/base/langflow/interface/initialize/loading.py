@@ -29,7 +29,7 @@ async def instantiate_class(vertex: "Vertex", global_flow_params: Optional[Any])
     # Instantiate the class based on the type
     # NOTE: there will be no validation for now since the types are loaded from config.yaml
     # return await instantiate_based_on_type(class_object, base_type, node_type, params, user_id=user_id)
-    c = class_object(vertex=vertex)
+    c = class_object(_vertex=vertex)
     c.global_flow_params = global_flow_params
     custom_component, build_results, artifacts = await build_component_and_get_results(
         component=c,
