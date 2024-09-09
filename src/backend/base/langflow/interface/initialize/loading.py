@@ -25,6 +25,7 @@ async def instantiate_class(vertex: "Vertex", global_flow_params: Optional[Any])
 
     logger.debug(f"Instantiating {node_type}")
     class_object = import_by_type(name=node_type)
+    logger.debug(f"Instantiated {node_type}")
 
     # Instantiate the class based on the type
     # NOTE: there will be no validation for now since the types are loaded from config.yaml

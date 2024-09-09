@@ -8,13 +8,13 @@ if TYPE_CHECKING:
 
 class GraphStateManager:
     def __init__(self):
-        try:
-            self.state_service: "StateService" = get_state_service()
-        except Exception as e:
-            logger.debug(f"Error getting state service. Defaulting to InMemoryStateService: {e}")
-            from langflow.services.state.service import InMemoryStateService
+        # try:
+        #     self.state_service: "StateService" = get_state_service()
+        # except Exception as e:
+        #     logger.debug(f"Error getting state service. Defaulting to InMemoryStateService: {e}")
+        from langflow.services.state.service import InMemoryStateService
 
-            self.state_service = InMemoryStateService()
+        self.state_service = InMemoryStateService()
 
     def append_state(self, key, new_state, run_id: str):
         self.state_service.append_state(key, new_state, run_id)

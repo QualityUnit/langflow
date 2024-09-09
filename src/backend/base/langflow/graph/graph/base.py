@@ -59,9 +59,9 @@ class Graph:
             edges (List[Dict[str, str]]): A list of dictionaries representing the edges of the graph.
             flow_id (Optional[str], optional): The ID of the flow. Defaults to None.
         """
-        if not log_config:
-            log_config = {"disable": False}
-        configure(**log_config)
+        # if not log_config:
+        #     log_config = {"disable": False}
+        # configure(**log_config)
         self.flow_id = flow_id
         self._start = start
         self._state_model = None
@@ -104,11 +104,11 @@ class Graph:
         self._cycles: Optional[List[tuple[str, str]]] = None
         self._call_order: List[str] = []
         self._snapshots: List[Dict[str, Any]] = []
-        try:
-            self.tracing_service: "TracingService" | None = get_tracing_service()
-        except Exception as exc:
-            logger.error(f"Error getting tracing service: {exc}")
-            self.tracing_service = None
+        # try:
+        #     self.tracing_service: "TracingService" | None = get_tracing_service()
+        # except Exception as exc:
+        #     logger.error(f"Error getting tracing service: {exc}")
+        self.tracing_service = None
         if start is not None and end is not None:
             self._set_start_and_end(start, end)
             self.prepare(start_component_id=start._id)
