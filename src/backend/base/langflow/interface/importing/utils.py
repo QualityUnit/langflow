@@ -3,8 +3,9 @@
 import importlib
 import sys
 from typing import Any, Type
-
+import copy
 from langflow.settings import settings
+
 
 
 def import_module(module_path: str) -> Any:
@@ -28,4 +29,6 @@ def import_by_type(name: str) -> Any:
     """Import class by type and name"""
     # fetching all components from settings
     components = settings.get_all_components()
-    return import_module(components[name].module_import)
+    c = components[name].built_object
+    # clone the object
+    return copy.deepcopy(c)

@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 from pydantic.v1 import BaseModel, Field, create_model
 from sqlmodel import Session, select
 
-from langflow.graph.schema import RunOutputs
+# from langflow.graph.schema import RunOutputs
 from langflow.schema import Data
 from langflow.schema.schema import INPUT_FIELD_NAME
 from langflow.services.database.models.flow import Flow
@@ -73,7 +73,7 @@ async def run_flow(
     flow_name: Optional[str] = None,
     output_type: Optional[str] = "chat",
     user_id: Optional[str] = None,
-) -> List[RunOutputs]:
+) -> List['RunOutputs']:
     if user_id is None:
         raise ValueError("Session is invalid")
     graph = await load_flow(user_id, flow_id, flow_name, tweaks)

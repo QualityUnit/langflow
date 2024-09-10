@@ -2,23 +2,41 @@ import contextlib
 import json
 import os
 from pathlib import Path
-from typing import List, Optional, Dict
-import logging
+from typing import List, Optional, Dict, Any
+import importlib
+import sys
 
 import yaml
 from pydantic import model_validator, validator, BaseModel
 from pydantic_settings import BaseSettings
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 # component config path
 COMPONENT_CONFIG_PATH = os.getenv("COMPONENT_CONFIG_PATH", str(Path(__file__).parent / "flow_components.yaml"))
+
+
+def import_module(module_path: str) -> Any:
+    """Import module from module path"""
+    if "from" not in module_path:
+        # Import the module using the module path
+        return importlib.import_module(module_path)
+    # Split the module path into its components
+    _, module_path, _, object_name = module_path.split()
+
+    # Import the module using the module path
+    if module_path in sys.modules:
+        module = importlib.reload(sys.modules[module_path])
+    else:
+        module = importlib.import_module(module_path)
+
+    return getattr(module, object_name)
 
 
 class ConfigurableComponent(BaseModel):
     name: str
     module_import: str
     documentation: Optional[str]
+    built_object: Any
 
 
 class Settings(BaseSettings):
@@ -67,18 +85,25 @@ def load_settings_from_yaml(file_path: str) -> Settings:
                 if category not in components:
                     components[category] = []
 
+                logger.debug(f"Loading {category}, {component} from {file_path}")
+                mod_import = components_dict[category][component].get("module_import")
+                try:
+                    obj = import_module(mod_import)
+                except Exception as e:
+                    logger.exception(e)
+                    raise e
                 c = ConfigurableComponent(
                     name=component,
-                    module_import=components_dict[category][component].get("module_import"),
-                    documentation=components_dict[category][component].get("documentation")
+                    module_import=mod_import,
+                    documentation=components_dict[category][component].get("documentation"),
+                    built_object=obj
                 )
                 components[category].append(c)
-                logger.debug(f"Loading {category}, {component} from {file_path}")
 
     return Settings(
         DEV=os.getenv("DEV", False),
         CACHE=os.getenv("CACHE", "InMemoryCache"),
-        COMPONENTS=components
+        COMPONENTS=components,
     )
 
 

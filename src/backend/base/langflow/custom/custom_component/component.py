@@ -7,7 +7,7 @@ import nanoid  # type: ignore
 import yaml
 from pydantic import BaseModel
 
-from langflow.graph.state.model import create_state_model
+# from langflow.graph.state.model import create_state_model
 from langflow.helpers.custom import format_type
 from langflow.schema.artifact import get_artifact_type, post_process_raw
 from langflow.schema.data import Data
@@ -85,8 +85,8 @@ class Component(CustomComponent):
         fields = {}
         for output in self.outputs:
             fields[output.name] = getattr(self, output.method)
-        self._state_model = create_state_model(model_name=model_name, **fields)
-        return self._state_model
+        # self._state_model = create_state_model(model_name=model_name, **fields)
+        return None
 
     def get_state_model_instance_getter(self):
         state_model = self._build_state_model()
