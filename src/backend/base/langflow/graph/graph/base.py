@@ -556,6 +556,7 @@ class Graph:
         outputs: list[str],
         stream: bool,
         session_id: str,
+        starting_node: Optional[InterfaceComponentTypes] = None,
     ) -> List[Optional["ResultData"]]:
         """
         Runs the graph with the given inputs.
@@ -590,7 +591,7 @@ class Graph:
 
         try:
             # Prioritize the webhook component if it exists
-            start_component_id = find_start_component_id(self._is_input_vertices)
+            start_component_id = find_start_component_id(self._is_input_vertices, starting_node)
             await self.process(start_component_id=start_component_id)
             self.increment_run_count()
         except Exception as exc:
@@ -668,6 +669,7 @@ class Graph:
             outputs: Optional[list[str]] = None,
             session_id: Optional[str] = None,
             stream: bool = False,
+            starting_node: Optional[InterfaceComponentTypes] = None,
     ) -> List[RunOutputs]:
         """
         Runs the graph with the given inputs.
@@ -709,6 +711,7 @@ class Graph:
                 outputs=outputs or [],
                 stream=stream,
                 session_id=session_id or "",
+                starting_node=starting_node,
             )
             run_output_object = RunOutputs(inputs=run_inputs, outputs=run_outputs)
             logger.debug(f"Run outputs: {run_output_object}")
