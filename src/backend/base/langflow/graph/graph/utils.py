@@ -1,11 +1,11 @@
 import copy
 from collections import defaultdict, deque
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-PRIORITY_LIST_OF_INPUTS = ["webhook", "chat"]
+PRIORITY_LIST_OF_INPUTS = ["webhook", "chatInput"]
 
 
-def find_start_component_id(vertices):
+def find_start_component_id(vertices, starting_node: Optional['InterfaceComponentTypes']):
     """
     Finds the component ID from a list of vertices based on a priority list of input types.
 
@@ -15,12 +15,19 @@ def find_start_component_id(vertices):
     Returns:
         str or None: The component ID that matches the highest priority input type, or None if no match is found.
     """
+    if starting_node:
+        component_id = next((vertex_id for vertex_id in vertices if starting_node.lower() in vertex_id.lower()), None)
+        if component_id:
+            return component_id
+        else:
+            raise ValueError(f"No component found with the given starting node type. Starting node type: {starting_node}")
+
+    # starting node is not provided
     for input_type_str in PRIORITY_LIST_OF_INPUTS:
         component_id = next((vertex_id for vertex_id in vertices if input_type_str in vertex_id.lower()), None)
         if component_id:
             return component_id
     return None
-
 
 def find_last_node(nodes, edges):
     """
