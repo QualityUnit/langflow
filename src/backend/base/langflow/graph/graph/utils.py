@@ -2,6 +2,8 @@ import copy
 from collections import defaultdict, deque
 from typing import Dict, List, Optional
 
+from langflow.graph.schema import InterfaceComponentTypes
+
 PRIORITY_LIST_OF_INPUTS = ["webhook", "chatInput"]
 
 
@@ -19,7 +21,7 @@ def find_start_component_id(graph,
         str or None: The component ID that matches the highest priority input type, or None if no match is found.
     """
     if starting_node:
-        if not trigger_id or trigger_id == "":
+        if starting_node.lower() != InterfaceComponentTypes.CustomTrigger.value.lower() or not trigger_id or trigger_id == "":
             component_id = next((vertex_id for vertex_id in vertices if starting_node.lower() in vertex_id.lower()), None)
         else:
             component_ids = [vertex_id for vertex_id in vertices if starting_node.lower() in vertex_id.lower() and trigger_id in vertex_id]
