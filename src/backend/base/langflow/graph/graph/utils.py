@@ -29,6 +29,8 @@ def find_start_component_id(graph,
                 if graph.get_vertex(component_id).params.get("trigger_id") == trigger_id:
                     return component_id
 
+            raise ValueError(f"No component found with the given starting node type. Starting node type: {starting_node} and trigger_id: {trigger_id}")
+
         if component_id:
             return component_id
         else:
