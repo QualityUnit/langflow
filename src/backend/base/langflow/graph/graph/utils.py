@@ -24,7 +24,7 @@ def find_start_component_id(graph,
         if starting_node.lower() != InterfaceComponentTypes.CustomTrigger.value.lower() or not trigger_id or trigger_id == "":
             component_id = next((vertex_id for vertex_id in vertices if starting_node.lower() in vertex_id.lower()), None)
         else:
-            component_ids = [vertex_id for vertex_id in vertices if starting_node.lower() in vertex_id.lower() and trigger_id in vertex_id]
+            component_ids = [vertex_id for vertex_id in vertices if starting_node.lower() in vertex_id.lower()]
             for component_id in component_ids:
                 if graph.get_vertex(component_id).params.get("trigger_id") == trigger_id:
                     return component_id
