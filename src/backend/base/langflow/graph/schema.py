@@ -52,6 +52,7 @@ class InterfaceComponentTypes(str, Enum, metaclass=ContainsEnumMeta):
     # power components
     ChatInput = "ChatInput"
     ChatOpenedTrigger = "ChatOpenedTrigger"
+    CustomTrigger = "CustomTrigger"
     ChatOutput = "ChatOutput"
     TextInput = "TextInput"
     TextOutput = "TextOutput"
@@ -74,6 +75,7 @@ INPUT_COMPONENTS = [
     InterfaceComponentTypes.TextInput,
     InterfaceComponentTypes.WebhookInput,
     InterfaceComponentTypes.ChatOpenedTrigger,
+    InterfaceComponentTypes.CustomTrigger,
 ]
 OUTPUT_COMPONENTS = [
     InterfaceComponentTypes.ChatOutput,
