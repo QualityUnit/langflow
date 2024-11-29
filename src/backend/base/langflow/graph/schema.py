@@ -52,6 +52,7 @@ class InterfaceComponentTypes(str, Enum, metaclass=ContainsEnumMeta):
     # power components
     ChatInput = "ChatInput"
     ChatOpenedTrigger = "ChatOpenedTrigger"
+    SlackMessageReceivedTrigger = "SlackMessageReceived"
     CustomTrigger = "CustomTrigger"
     ChatOutput = "ChatOutput"
     TextInput = "TextInput"
@@ -76,6 +77,7 @@ INPUT_COMPONENTS = [
     InterfaceComponentTypes.WebhookInput,
     InterfaceComponentTypes.ChatOpenedTrigger,
     InterfaceComponentTypes.CustomTrigger,
+    InterfaceComponentTypes.SlackMessageReceivedTrigger,
 ]
 OUTPUT_COMPONENTS = [
     InterfaceComponentTypes.ChatOutput,
