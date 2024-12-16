@@ -479,6 +479,7 @@ class DefaultPromptField(Input):
 
 class DynamicMultiSelect(BaseInputMixin):
     field_type: Optional[SerializableFieldTypes] = FieldTypes.DYNAMIC_MULTI_SELECT
+    option_selection_limit: Optional[int] = None
 
 class DynamicSingleSelect(BaseInputMixin):
     field_type: Optional[SerializableFieldTypes] = FieldTypes.DYNAMIC_SINGLE_SELECT
