@@ -383,6 +383,9 @@ class NestedDictInput(BaseInputMixin, ListableInputMixin, MetadataTraceMixin, In
     """
 
     field_type: SerializableFieldTypes = FieldTypes.NESTED_DICT
+    show_secret: Optional[CoalesceBool] = True
+    key_placeholder: Optional[str] = "Key"
+    value_placeholder: Optional[str] = "Value"
     value: Optional[dict | Data] = {}
 
 
