@@ -156,6 +156,8 @@ class ComponentVertex(Vertex):
             artifact = artifacts[key]
             if isinstance(artifact, (AsyncIterator, Iterator)):
                 continue
+            if artifact is None:
+                continue
             if any(
                 key not in artifact for key in ["text", "sender", "sender_name", "session_id", "stream_url"]
             ) and not isinstance(artifact, Message):
