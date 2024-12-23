@@ -97,6 +97,10 @@ async def build_component(params: dict, component: "AppComponent"):
 async def build_component_with_input_output(component, params):
     # Now set the params as attributes of the custom_component
     component.set_attributes(params)
+
+    # update component outputs if needed
+    component.update_output_handles()
+
     build_results, artifacts = await component.build_results()
 
     return component, build_results, artifacts

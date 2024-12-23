@@ -87,6 +87,7 @@ class CustomComponent(BaseComponent):
     _output_logs: dict[str, Log] = {}
     _tracing_service: Optional["TracingService"] = None
     _tree: Optional[dict] = None
+    _current_output_name: Optional[str] = None
 
     def __init__(self, **data):
         """
