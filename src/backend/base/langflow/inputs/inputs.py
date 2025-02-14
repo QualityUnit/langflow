@@ -491,6 +491,10 @@ class MultiSelect(BaseInputMixin, DropDownMixin):
     field_type: Optional[SerializableFieldTypes] = FieldTypes.MULTI_SELECT
     options: list[str] = Field(default_factory=list)
 
+class GoogleDrivePicker(BaseInputMixin):
+    field_type: Optional[SerializableFieldTypes] = FieldTypes.GOOGLE_DRIVE_PICKER
+    document_filter_type: Optional[str] = None
+
 
 InputTypes = Union[
     Input,
@@ -515,6 +519,7 @@ InputTypes = Union[
     DynamicMultiSelect,
     DynamicSingleSelect,
     MultiSelect,
+    GoogleDrivePicker,
     TableInput,
 ]
 

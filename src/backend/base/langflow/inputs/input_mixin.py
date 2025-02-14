@@ -23,6 +23,7 @@ class FieldTypes(str, Enum):
     DYNAMIC_MULTI_SELECT = "dynamic_multi_select"
     DYNAMIC_SINGLE_SELECT = "dynamic_single_select"
     TABLE = "table"
+    GOOGLE_DRIVE_PICKER = "google_drive_picker"
 
 
 SerializableFieldTypes = Annotated[FieldTypes, PlainSerializer(lambda v: v.value, return_type=str)]
@@ -81,6 +82,9 @@ class BaseInputMixin(BaseModel, validate_assignment=True):  # type: ignore
 
     loading_options_api: Optional[str] = None
     """Specifies the api to integrate to in order to load the options in dynamic_multi_select"""
+
+    document_filter_type: Optional[str] = None
+    """Used for google drive picker to filter the documents"""
 
     def to_dict(self):
         return self.model_dump(exclude_none=True, by_alias=True)
