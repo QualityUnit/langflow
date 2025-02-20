@@ -63,6 +63,7 @@ DIRECT_TYPES = [
     "code",
     "dynamic_multi_select",
     "dynamic_single_select",
+    "google_drive_picker",
     "multi_select",
     "NestedDict",
 ]
