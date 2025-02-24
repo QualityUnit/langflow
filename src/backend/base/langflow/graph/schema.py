@@ -53,6 +53,9 @@ class InterfaceComponentTypes(str, Enum, metaclass=ContainsEnumMeta):
     ChatInput = "ChatInput"
     ChatOpenedTrigger = "ChatOpenedTrigger"
     SlackMessageReceivedTrigger = "SlackMessageReceived"
+    GoogleCalendarEventStartedTrigger = "GoogleCalendarEventStarted"
+    GoogleCalendarEventEndedTrigger = "GoogleCalendarEventEnded"
+    GoogleCalendarEventUpdatedTrigger = "GoogleCalendarEventUpdated"
     CustomTrigger = "CustomTrigger"
     ChatOutput = "ChatOutput"
     TextInput = "TextInput"
@@ -78,6 +81,9 @@ INPUT_COMPONENTS = [
     InterfaceComponentTypes.ChatOpenedTrigger,
     InterfaceComponentTypes.CustomTrigger,
     InterfaceComponentTypes.SlackMessageReceivedTrigger,
+    InterfaceComponentTypes.GoogleCalendarEventStartedTrigger,
+    InterfaceComponentTypes.GoogleCalendarEventEndedTrigger,
+    InterfaceComponentTypes.GoogleCalendarEventUpdatedTrigger,
 ]
 OUTPUT_COMPONENTS = [
     InterfaceComponentTypes.ChatOutput,
