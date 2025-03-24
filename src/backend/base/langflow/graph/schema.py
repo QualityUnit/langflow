@@ -56,6 +56,7 @@ class InterfaceComponentTypes(str, Enum, metaclass=ContainsEnumMeta):
     GoogleCalendarEventStartedTrigger = "GoogleCalendarEventStarted"
     GoogleCalendarEventEndedTrigger = "GoogleCalendarEventEnded"
     GoogleCalendarEventUpdatedTrigger = "GoogleCalendarEventUpdated"
+    HubspotNewMessageReceivedTrigger = "HubspotNewMessageReceived"
     CustomTrigger = "CustomTrigger"
     ChatOutput = "ChatOutput"
     TextInput = "TextInput"
@@ -84,6 +85,7 @@ INPUT_COMPONENTS = [
     InterfaceComponentTypes.GoogleCalendarEventStartedTrigger,
     InterfaceComponentTypes.GoogleCalendarEventEndedTrigger,
     InterfaceComponentTypes.GoogleCalendarEventUpdatedTrigger,
+    InterfaceComponentTypes.HubspotNewMessageReceivedTrigger,
 ]
 OUTPUT_COMPONENTS = [
     InterfaceComponentTypes.ChatOutput,
